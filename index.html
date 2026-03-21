@@ -818,7 +818,7 @@
             <span class="label">role:</span><span>M.S. Student | Ph.D. Applicant</span>
             <span class="label">dept:</span><span>Sun Yat-sen University (SYSU)</span>
             <span class="label">email:</span><span><a href="mailto:wangxan@mail2.sysu.edu.cn">wangxan@mail2.sysu.edu.cn</a></span>
-            <span class="label">links:</span><span>[<a href="https://github.com/tetean">GitHub</a>] [<a href="https://openreview.net/profile?id=%7EXiean_Wang1">Open Review</a>]</span>
+            <span class="label">links:</span><span>[<a href="https://github.com/tetean">GitHub</a>] [<a href="https://openreview.net/profile?id=%7EXiean_Wang1">OpenReview</a>]</span>
         </div>
         <div class="screen-box">
             <div class="screen-header">
@@ -1099,7 +1099,7 @@
 
             if (ch === '\n') {
                 rebuildVimIntro();
-                vimData.timer = setTimeout(typeStep, 150);
+                vimData.timer = setTimeout(typeStep, 500);
             } else {
                 var typed = vimData.fullText.substring(0, vimData.charIdx);
                 var typedLines = typed.split('\n');
@@ -1108,7 +1108,7 @@
                 if (lastLineEl) {
                     lastLineEl.innerHTML = typedLines[lastIdx] + '<span class="vim-cursor"></span>';
                 }
-                vimData.timer = setTimeout(typeStep, 20);
+                vimData.timer = setTimeout(typeStep, 100);
             }
         }
 
