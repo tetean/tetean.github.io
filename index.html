@@ -847,11 +847,11 @@
     <div class="status-line">
         <div class="status-left">
             <div class="mode" id="vimMode">NORMAL</div>
-            <div class="file-path" id="filePath">academic_path/news.log [+]</div>
+            <div class="file-path" id="filePath">~/news.log [+]</div>
             <span class="cursor"></span>
         </div>
         <div class="status-right">
-            <span id="statusRight">utf-8 | profile | Xiean (Sean) Wang | 0%</span>
+            <span id="statusRight">utf-8 | profile | 0%</span>
         </div>
     </div>
 
@@ -933,7 +933,6 @@
 <section id="awards">
 <h2>Selected_Awards</h2>
 <ul class="vim-list">
-  <li>Research Intern @ National Supercomputer Center in Guangzhou (NSCC-GZ), 2025</li>
   <li>Silver Award, 3rd Greater Bay Area Cup AI for Science Technology Competition</li>
   <li>First Class Scholarship, Jilin University (Top 15% academic performance)</li>
   <li>National Third Prize, Blue Bridge Cup Python Group</li>
@@ -1443,7 +1442,7 @@
 
             function updateStatus(sectionId) {
                 var fileName = sectionFileMap[sectionId] || 'news.log';
-                filePathEl.textContent = 'academic_path/' + fileName + ' [+]';
+                filePathEl.textContent = '~/' + fileName + ' [+]';
                 var pct = getScrollPercent();
                 statusRightEl.textContent = 'utf-8 | profile | Xiean (Sean) Wang | ' + pct + '%';
             }
