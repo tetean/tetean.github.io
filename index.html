@@ -1354,16 +1354,25 @@
         var flipTiles  = [];
         var lastFlipText = '';
 
+        // Duration (ms) for which each board frame is held before advancing.
+        var BOARD_SHORT_DURATION = 3000;  // festival short name
+        var BOARD_CHUNK_DURATION = 2500;  // each greeting chunk
+        var BOARD_DATE_INTERVAL  = 1000;  // date/time refresh
+
+        // Board scheduler state.
+        var boardState = {
+            mode:        'date',   // 'date' | 'festival'
+            phase:       'short',  // 'short' | 'chunk'
+            festival:    null,
+            chunks:      [],
+            chunkIndex:  0,
+            timer:       null
+        };
+
         // Character sequences for forward-only flip logic.
-        // Letters advance A -> B -> ... -> Z -> A.
-        // Digits advance 0 -> 1 -> ... -> 9 -> 0.
-        // All other characters (space, hyphen, colon, etc.) flip directly.
         var FLIP_ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
         var FLIP_DIGIT = '0123456789';
 
-        // Returns the ordered array of characters a tile must pass through to
-        // reach `to` starting after `from`, always moving forward in the sequence.
-        // For characters outside ALPHA or DIGIT, returns [to] (direct flip).
         function getFlipSequence(from, to) {
             if (from === to) return [];
 
@@ -1397,18 +1406,14 @@
         }
 
         // Timing constants (ms).
-        // Intermediate steps in a multi-step sequence use the SEQ values so that
-        // e.g. a 5-step digit wrap finishes well within the next clock tick.
-        // The final (or only) flip in a sequence uses the SINGLE values, which are
-        // slightly slower than the original to satisfy the "slow down a bit" request.
-        var FLIP_SINGLE_UPPER_DUR   = 250;  // upper-flap animation duration
-        var FLIP_SINGLE_LOWER_DELAY = 200;  // delay before lower-flap starts
-        var FLIP_SINGLE_LOWER_DUR   = 250;  // lower-flap animation duration
+        var FLIP_SINGLE_UPPER_DUR   = 250;
+        var FLIP_SINGLE_LOWER_DELAY = 200;
+        var FLIP_SINGLE_LOWER_DUR   = 250;
 
         var FLIP_SEQ_UPPER_DUR      = 90;
         var FLIP_SEQ_LOWER_DELAY    = 70;
         var FLIP_SEQ_LOWER_DUR      = 90;
-        var FLIP_SEQ_GAP            = 25;   // pause between consecutive steps
+        var FLIP_SEQ_GAP            = 25;
 
         function createFlipTile(boardEl) {
             var el = document.createElement('div');
@@ -1428,12 +1433,9 @@
             var lfCh    = el.querySelector('.ft-lower-flap .ft-char');
 
             var current   = ' ';
-            var queue     = [];   // ordered list of characters yet to be displayed
+            var queue     = [];
             var animating = false;
 
-            // Execute a single mechanical flip to newChar.
-            // isFinal controls which timing set is used (slower for the last step).
-            // onDone is called once the flip settles.
             function doFlip(newChar, isFinal, onDone) {
                 animating = true;
 
@@ -1451,7 +1453,7 @@
                 ufEl.style.animation = 'none';
                 lfEl.style.animation = 'none';
                 lfEl.style.transform = 'perspective(200px) rotateX(90deg)';
-                ufEl.offsetHeight; // force reflow to restart animation
+                ufEl.offsetHeight;
 
                 ufEl.style.animation = 'ft-flip-upper ' + (upperDur / 1000) + 's ease-in forwards';
 
@@ -1470,11 +1472,10 @@
                 }, lowerDelay);
             }
 
-            // Drain the queue one step at a time.
             function processQueue() {
                 if (queue.length === 0) return;
                 var next    = queue.shift();
-                var isFinal = queue.length === 0; // last step gets the slower timing
+                var isFinal = queue.length === 0;
                 doFlip(next, isFinal, function() {
                     if (queue.length > 0) {
                         setTimeout(processQueue, FLIP_SEQ_GAP);
@@ -1483,28 +1484,58 @@
             }
 
             return {
-                // Called once per board update with the desired target character.
-                // Builds the forward-only sequence from the last pending state to
-                // newChar and starts draining if not already animating.
                 setChar: function(newChar) {
-                    // Derive the sequence starting point: the last character that
-                    // has been queued (or current if the queue is empty).
                     var from = queue.length > 0 ? queue[queue.length - 1] : current;
                     if (newChar === from) return;
-
                     var seq = getFlipSequence(from, newChar);
                     if (seq.length === 0) return;
-
-                    // Replace the pending queue with the new target sequence.
-                    // If a flip is already in progress, onDone will pick up the
-                    // new queue automatically when the current step finishes.
                     queue = seq;
-
                     if (!animating) {
                         processQueue();
                     }
                 }
             };
+        }
+
+        // Split text into word-boundary chunks of at most maxLen characters.
+        function splitIntoChunks(text, maxLen) {
+            var words = text.split(' ');
+            var chunks = [];
+            var current = '';
+            for (var i = 0; i < words.length; i++) {
+                var word = words[i];
+                if (current === '') {
+                    current = word;
+                } else if (current.length + 1 + word.length <= maxLen) {
+                    current += ' ' + word;
+                } else {
+                    chunks.push(current);
+                    current = word;
+                }
+            }
+            if (current !== '') { chunks.push(current); }
+            return chunks;
+        }
+
+        // Push a new text string to the flip tiles with staggered tile delay.
+        function setFlipText(text) {
+            if (text === lastFlipText) return;
+            lastFlipText = text;
+            for (var i = 0; i < TILE_COUNT; i++) {
+                (function(idx, ch) {
+                    setTimeout(function() {
+                        flipTiles[idx].setChar(ch);
+                    }, idx * 35);
+                })(i, text[i] || ' ');
+            }
+        }
+
+        // Update the subtitle line below the board.
+        function setSubtitle(text) {
+            var subEl = document.getElementById('flipSubtitle');
+            if (!subEl) return;
+            subEl.textContent = text;
+            subEl.style.opacity = text ? '1' : '0';
         }
 
         var FESTIVALS = [
@@ -1516,7 +1547,7 @@
             {
                 fixed: true, month: 5, day: 1,
                 short: 'HAPPY LABOR DAY',
-                full: 'Honoring your hard work - may your efforts always bring you success and fulfillment.'
+                full: 'Honoring your hard work--may your efforts always bring you success and fulfillment.'
             },
             {
                 fixed: true, month: 10, day: 31,
@@ -1642,16 +1673,54 @@
             return ' '.repeat(left) + text + ' '.repeat(right);
         }
 
-        function getDisplayText() {
+        // Central scheduler: drives the board through date mode or festival
+        // short-name -> greeting-chunks -> short-name cycles.
+        function scheduleBoardTick() {
+            if (boardState.timer) { clearTimeout(boardState.timer); }
+
             var festival = getCurrentFestival();
-            if (festival) {
-                return { text: padCenter(festival.short, TILE_COUNT), sub: festival.full };
+
+            if (!festival) {
+                // Date/time mode: reset festival tracking, show clock, refresh each second.
+                boardState.mode    = 'date';
+                boardState.festival = null;
+                var tz = getTimezoneAbbr();
+                setFlipText(padCenter(getDateDisplay(), TILE_COUNT));
+                setSubtitle(tz ? 'local time (' + tz + ')' : '');
+                boardState.timer = setTimeout(scheduleBoardTick, BOARD_DATE_INTERVAL);
+                return;
             }
-            var tz = getTimezoneAbbr();
-            return {
-                text: padCenter(getDateDisplay(), TILE_COUNT),
-                sub: tz ? 'local time (' + tz + ')' : ''
-            };
+
+            // Festival mode: reinitialize state when the active festival changes.
+            if (boardState.festival !== festival) {
+                boardState.festival   = festival;
+                boardState.mode       = 'festival';
+                boardState.phase      = 'short';
+                boardState.chunks     = splitIntoChunks(festival.full, TILE_COUNT);
+                boardState.chunkIndex = 0;
+            }
+
+            if (boardState.phase === 'short') {
+                // Display the festival short name with the full greeting as subtitle,
+                // then switch to chunk scrolling after BOARD_SHORT_DURATION.
+                setFlipText(padCenter(festival.short, TILE_COUNT));
+                setSubtitle(festival.full);
+                boardState.phase      = 'chunk';
+                boardState.chunkIndex = 0;
+                boardState.timer      = setTimeout(scheduleBoardTick, BOARD_SHORT_DURATION);
+            } else {
+                // Display the next greeting chunk; hide subtitle during chunk scroll.
+                var chunk = boardState.chunks[boardState.chunkIndex];
+                setFlipText(padCenter(chunk, TILE_COUNT));
+                setSubtitle('');
+                boardState.chunkIndex++;
+                // After the last chunk, loop back to the short-name phase.
+                if (boardState.chunkIndex >= boardState.chunks.length) {
+                    boardState.phase      = 'short';
+                    boardState.chunkIndex = 0;
+                }
+                boardState.timer = setTimeout(scheduleBoardTick, BOARD_CHUNK_DURATION);
+            }
         }
 
         function initFlipBoard() {
@@ -1659,30 +1728,7 @@
             for (var i = 0; i < TILE_COUNT; i++) {
                 flipTiles.push(createFlipTile(boardEl));
             }
-            updateFlipBoard();
-            setInterval(updateFlipBoard, 1000);
-        }
-
-        function updateFlipBoard() {
-            var result = getDisplayText();
-            var text   = result.text;
-
-            if (text === lastFlipText) return;
-            lastFlipText = text;
-
-            var subEl = document.getElementById('flipSubtitle');
-            if (subEl) {
-                subEl.textContent = result.sub;
-                subEl.style.opacity = result.sub ? '1' : '0';
-            }
-
-            for (var i = 0; i < TILE_COUNT; i++) {
-                (function(idx, ch) {
-                    setTimeout(function() {
-                        flipTiles[idx].setChar(ch);
-                    }, idx * 35);
-                })(i, text[i] || ' ');
-            }
+            scheduleBoardTick();
         }
 
         // =====================================================================
