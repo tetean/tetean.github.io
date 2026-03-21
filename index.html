@@ -885,7 +885,7 @@
             <span class="label">role:</span><span>M.S. Student | Ph.D. Applicant</span>
             <span class="label">dept:</span><span>Sun Yat-sen University (SYSU)</span>
             <span class="label">email:</span><span><a href="mailto:wangxan@mail2.sysu.edu.cn">wangxan@mail2.sysu.edu.cn</a></span>
-            <span class="label">links:</span><span>[<a href="https://github.com/tetean">GitHub</a>] [<a href="https://openreview.net/profile?id=%7EXiean_Wang1">OpenReview</a>]</span>
+            <span class="label">links:</span><span>[<a href="https://github.com/tetean" target="_blank">GitHub</a>] [<a href="https://openreview.net/profile?id=%7EXiean_Wang1" target="_blank">OpenReview</a>]</span>
         </div>
         <div class="screen-box">
             <div class="screen-header">
@@ -972,7 +972,7 @@
     <strong>FUSION: Dataset Pruning via Fusing Uncertainty with Structural Information for Optimal Neural Training in Crystal Property Prediction</strong>
     <span class="comment">Xiean Wang, et al. | AAAI 2026</span>
     <p>Proposed an offline dataset pruning strategy for crystal property prediction using Deep Evidential Regression and SOAP descriptors.</p>
-    [<a href="https://ojs.aaai.org/index.php/AAAI/article/view/39863">Paper</a>] [<a href="https://github.com/tetean/FUSION">Code</a>]
+    [<a href="https://ojs.aaai.org/index.php/AAAI/article/view/39863" target="_blank">Paper</a>] [<a href="https://github.com/tetean/FUSION" target="_blank">Code</a>]
   </div>
 </div>
 
@@ -984,7 +984,7 @@
     <strong>No-Data-Driven Crystal Structure Prediction via Model-Free Reinforcement Learning</strong>
     <span class="comment">Xiean Wang, et al. | ICIC 2025</span>
     <p>CSP-Gym is a model-free reinforcement learning environment for crystal structure prediction that dynamically explores low-energy configurations without pre-collected datasets.</p>
-    [<a href="https://link.springer.com/chapter/10.1007/978-981-96-9815-8_26">Paper</a>] [<a href="https://github.com/tetean/CSP-Gym">Code</a>] [<a href="https://cspgym.tetean.com/">Docs</a>]
+    [<a href="https://link.springer.com/chapter/10.1007/978-981-96-9815-8_26" target="_blank">Paper</a>] [<a href="https://github.com/tetean/CSP-Gym" target="_blank">Code</a>] [<a href="https://cspgym.tetean.com/" target="_blank">Docs</a>]
   </div>
 </div>
 
@@ -1046,7 +1046,7 @@
 <ul>
   <li><strong>Office</strong>: Room A510, Computer Science Building, East Campus, Sun Yat-sen University, Guangzhou, China</li>
   <li><strong>Email</strong>: <a href="mailto:academic@tetean.com">academic@tetean.com</a> and <a href="mailto:wangxan@mail2.sysu.edu.cn">wangxan@mail2.sysu.edu.cn</a></li>
-  <li><strong>Status</strong>: Seeking Ph.D. positions globally for 2027 entry.</li>
+  <li><strong>Status</strong>: Currently expanding into new research directions. If you would like to discuss potential collaboration opportunities, please feel free to contact me.</li>
 </ul>
 </section>
 `;
@@ -1125,7 +1125,7 @@
 
         var vimData = {
             lines: [
-                "I am a Master's student at SYSU, focusing on AI for Science, including computational materials science, graph-based modeling, and uncertainty-aware learning. Seeking Ph.D. positions for 2027."
+                "I am a Master's student at SYSU, focusing on AI for Science, including computational materials science, graph-based modeling, and uncertainty-aware learning. Exploring new research directions and open to collaboration. Feel free to contact me."
             ],
             fullText: '',
             charIdx: 0,
@@ -1370,9 +1370,13 @@
         };
 
         // Character sequences for forward-only flip logic.
+        // Letters and digits each form their own closed cycle.
         var FLIP_ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
         var FLIP_DIGIT = '0123456789';
 
+        // Compute the forward-wrap sequence from `from` to `to`.
+        // If both chars belong to the same set (ALPHA or DIGIT), cycle forward
+        // within that set.  Otherwise return a single-step direct change.
         function getFlipSequence(from, to) {
             if (from === to) return [];
 
@@ -1402,18 +1406,27 @@
                 return seq;
             }
 
+            // Cross-type or special character: single direct flip.
             return [to];
         }
 
+        // -----------------------------------------------------------------------
         // Timing constants (ms).
-        var FLIP_SINGLE_UPPER_DUR   = 250;
-        var FLIP_SINGLE_LOWER_DELAY = 200;
-        var FLIP_SINGLE_LOWER_DUR   = 250;
+        //
+        // SINGLE  - used for the final (or only) flip to the target character.
+        //           Slower to make the landing clearly readable.
+        // SEQ     - used for each intermediate character in a multi-step sequence.
+        //           Fast enough to feel mechanical, slow enough to follow visually.
+        // GAP     - pause between consecutive SEQ flips.
+        // -----------------------------------------------------------------------
+        var FLIP_SINGLE_UPPER_DUR   = 300;
+        var FLIP_SINGLE_LOWER_DELAY = 260;
+        var FLIP_SINGLE_LOWER_DUR   = 300;
 
-        var FLIP_SEQ_UPPER_DUR      = 90;
-        var FLIP_SEQ_LOWER_DELAY    = 70;
-        var FLIP_SEQ_LOWER_DUR      = 90;
-        var FLIP_SEQ_GAP            = 25;
+        var FLIP_SEQ_UPPER_DUR      = 110;
+        var FLIP_SEQ_LOWER_DELAY    = 90;
+        var FLIP_SEQ_LOWER_DUR      = 110;
+        var FLIP_SEQ_GAP            = 30;
 
         function createFlipTile(boardEl) {
             var el = document.createElement('div');
@@ -1432,9 +1445,20 @@
             var ufCh    = el.querySelector('.ft-upper-flap .ft-char');
             var lfCh    = el.querySelector('.ft-lower-flap .ft-char');
 
-            var current   = ' ';
+            // Every tile starts at 'A'.  On the first setChar call the tile
+            // resets to '0' if the target is a digit, keeping the starting
+            // position within the correct character set.
+            var INIT_CHAR = 'A';
+            var current   = INIT_CHAR;
+            var firstSet  = true;
             var queue     = [];
             var animating = false;
+
+            // Write the initial character to all four DOM layers immediately.
+            upperSt.textContent = INIT_CHAR;
+            lowerSt.textContent = INIT_CHAR;
+            ufCh.textContent    = INIT_CHAR;
+            lfCh.textContent    = INIT_CHAR;
 
             function doFlip(newChar, isFinal, onDone) {
                 animating = true;
@@ -1485,6 +1509,22 @@
 
             return {
                 setChar: function(newChar) {
+                    // On the very first call, snap the tile's starting position to
+                    // the canonical origin for the target character's type:
+                    //   digit  -> '0'  (tile was initialised to 'A')
+                    //   letter -> 'A'  (already correct, no change needed)
+                    //   other  -> 'A'  (will produce a single direct flip)
+                    if (firstSet) {
+                        firstSet = false;
+                        if (FLIP_DIGIT.indexOf(newChar) !== -1) {
+                            current             = '0';
+                            upperSt.textContent = '0';
+                            lowerSt.textContent = '0';
+                            ufCh.textContent    = '0';
+                            lfCh.textContent    = '0';
+                        }
+                    }
+
                     var from = queue.length > 0 ? queue[queue.length - 1] : current;
                     if (newChar === from) return;
                     var seq = getFlipSequence(from, newChar);
