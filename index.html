@@ -1,0 +1,1513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xiean Wang's Homepage</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        /* --- CSS Variables & Themes --- */
+        :root {
+            --bg-dark: #1a1b26;
+            --bg-status: #24283b;
+            --text-main: #a9b1d6;
+            --text-muted: #565f89;
+            --accent-green: #9ece6a;
+            --accent-blue: #7aa2f7;
+            --accent-orange: #ff9e64;
+            --accent-magenta: #bb9af7;
+            --cursor-bg: #c0caf5;
+            --nav-bg: #16161e;
+            --font-mono: "Fira Code", "JetBrains Mono", "Courier New", monospace;
+            --sidebar-width: 390px;
+        }
+
+        body.light-mode {
+            --bg-dark: #eef1f5;
+            --bg-status: #d1d5db;
+            --text-main: #2e3440;
+            --text-muted: #6b7280;
+            --accent-green: #448c27;
+            --accent-blue: #005a9e;
+            --accent-orange: #d75f00;
+            --accent-magenta: #a626a4;
+            --cursor-bg: #333333;
+            --nav-bg: #ffffff;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            scroll-behavior: smooth;
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: var(--font-mono);
+            font-size: 14px;
+            line-height: 1.7;
+            padding-top: 50px;
+            padding-bottom: 40px;
+        }
+
+        /* --- Fixed Left Sidebar --- */
+        .left-panel {
+            position: fixed;
+            top: 50px;
+            left: 0;
+            width: var(--sidebar-width);
+            height: calc(100vh - 50px - 25px);
+            padding: 24px 18px 20px 18px;
+            overflow-y: auto;
+            background: var(--nav-bg);
+            border-right: 1px solid var(--bg-status);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            z-index: 500;
+        }
+
+        .left-panel .avatar-box {
+            width: 50%;
+            aspect-ratio: 1 / 1;
+            border: 1px solid var(--text-muted);
+            padding: 5px;
+            background: var(--bg-status);
+            flex-shrink: 0;
+            align-self: center;
+        }
+
+        .left-panel .avatar-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .left-panel .bio-info-list {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 6px 10px;
+            align-content: start;
+            font-size: 0.78rem;
+            word-break: break-word;
+        }
+
+        .left-panel .bio-info-list .label {
+            color: var(--accent-magenta);
+            white-space: nowrap;
+        }
+
+        .left-panel .bio-info-list a {
+            color: var(--accent-blue);
+            text-decoration: none;
+        }
+
+        .left-panel .bio-info-list a:hover {
+            color: var(--accent-magenta);
+            text-decoration: underline;
+        }
+
+        .left-panel .screen-box {
+            border: 1px solid var(--text-muted);
+            border-radius: 4px;
+            background: var(--bg-status);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+
+        .left-panel .screen-header {
+            padding: 5px 10px;
+            border-bottom: 1px solid var(--text-muted);
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--nav-bg);
+            flex-shrink: 0;
+        }
+
+        /* --- Main Container --- */
+        .container {
+            margin: 0 0 0 var(--sidebar-width);
+            padding: 40px 60px;
+        }
+
+        /* --- Fixed Buttons (Message + Theme) --- */
+        .fixed-btn-group {
+            position: fixed;
+            bottom: 40px;
+            right: 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 2000;
+        }
+
+        .fixed-btn {
+            width: 44px;
+            height: 44px;
+            background: var(--bg-status);
+            border: 1px solid var(--text-muted);
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0.6;
+            transition: all 0.3s;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        .fixed-btn:hover {
+            opacity: 1;
+            border-color: var(--accent-orange);
+            color: var(--accent-orange);
+            transform: translateY(-2px);
+        }
+
+        /* --- Vim Tab Bar Navigation --- */
+        nav {
+            position: fixed; top: 0; left: 0; right: 0;
+            background: var(--nav-bg); display: flex;
+            justify-content: center;
+            border-bottom: 1px solid var(--bg-status); z-index: 1000;
+        }
+        .nav-links { display: flex; list-style: none; }
+        .nav-links li a {
+            display: inline-block; padding: 10px 20px;
+            color: var(--text-muted); text-decoration: none;
+            border-right: 1px solid var(--bg-status); font-size: 0.8rem;
+            transition: background 0.2s;
+        }
+        .nav-links li a:hover { background: var(--bg-status); color: var(--text-main); }
+        .nav-links li a.active { background: var(--bg-dark); color: var(--accent-orange); border-top: 2px solid var(--accent-orange); }
+
+        /* --- Punctuation Highlighting --- */
+        .punct { color: var(--accent-orange); font-weight: bold; }
+
+        /* --- Markdown Content Styling --- */
+        #content h1 { color: var(--accent-blue); font-size: 2rem; margin-bottom: 30px; font-weight: normal; }
+        #content h2 { color: var(--accent-magenta); margin: 50px 0 25px 0; font-weight: normal; display: flex; align-items: center; }
+        #content h2::before { content: "## "; color: var(--text-muted); }
+        #content h3 { color: var(--accent-blue); margin: 25px 0 15px 0; font-weight: normal; font-size: 1.1rem; }
+        #content h3::before { content: "### "; color: var(--text-muted); }
+        #content p { margin-bottom: 15px; }
+
+        #content ul:not(.vim-list) { list-style: none; padding-left: 20px; border-left: 1px solid var(--bg-status); margin-bottom: 25px; }
+        #content li { margin-bottom: 12px; }
+
+        .vim-list {
+            counter-reset: vim-counter;
+            list-style: none;
+            padding-left: 0 !important;
+            border-left: none !important;
+            margin-bottom: 30px;
+        }
+        .vim-list li {
+            counter-increment: vim-counter;
+            position: relative;
+            padding-left: 50px;
+            margin-bottom: 8px !important;
+        }
+        .vim-list li::before {
+            content: counter(vim-counter);
+            color: var(--text-muted);
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 35px;
+            text-align: right;
+            font-size: 0.85rem;
+            user-select: none;
+            font-family: var(--font-mono);
+        }
+
+        /* --- News item date + text alignment --- */
+        .ni {
+            display: flex;
+            gap: 10px;
+            align-items: baseline;
+        }
+        .nd {
+            flex-shrink: 0;
+            white-space: nowrap;
+            color: var(--text-muted);
+        }
+        .nt {
+            flex: 1;
+        }
+
+        /* Publication Card Design */
+        .pub-card {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+            align-items: flex-start;
+        }
+        .pub-cover {
+            width: 160px;
+            height: 100px;
+            flex-shrink: 0;
+            border: 1px solid var(--text-muted);
+            background: var(--bg-status);
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .pub-cover img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: grayscale(100%) brightness(0.8);
+            transition: filter 0.3s;
+        }
+        .pub-card:hover .pub-cover img { filter: grayscale(0%) brightness(1); }
+        .pub-info { flex: 1; }
+        .pub-info strong { color: var(--accent-blue); display: block; margin-bottom: 4px; font-size: 1.05rem; }
+
+        #content a { color: var(--accent-blue); text-decoration: none; }
+        #content a:hover { text-decoration: underline; color: var(--accent-magenta); }
+
+        .comment { color: var(--text-muted); font-style: italic; }
+
+        /* --- Screen Dots (reusable) --- */
+        .screen-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .screen-dots span {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .screen-dots span:nth-child(1) { background: #ff5f57; opacity: 0.75; }
+        .screen-dots span:nth-child(2) { background: #febc2e; opacity: 0.75; }
+        .screen-dots span:nth-child(3) { background: #28c840; opacity: 0.75; }
+
+        /* --- Vim Status Line --- */
+        .status-line {
+            position: fixed; bottom: 0; left: 0; right: 0; height: 25px;
+            background: var(--bg-status); display: flex; justify-content: space-between;
+            align-items: center; font-size: 0.75rem; z-index: 1001;
+        }
+        .status-left { display: flex; align-items: center; }
+        .mode { background: var(--accent-blue); color: #fff; padding: 0 10px; font-weight: bold; margin-right: 10px; }
+        .file-path { color: var(--text-main); }
+        .status-right { padding: 0 15px; color: var(--text-muted); }
+
+        .cursor {
+            display: inline-block;
+            width: 8px;
+            height: 1.2em;
+            background: var(--cursor-bg);
+            vertical-align: middle;
+            animation: blink 1s step-end infinite;
+            margin-left: 4px;
+        }
+        .cursor-paused {
+            animation: none;
+            opacity: 1;
+        }
+        @keyframes blink { from, to { opacity: 1; } 50% { opacity: 0; } }
+
+        /* --- Vim Typewriter Intro --- */
+        .vim-intro {
+            background: transparent;
+            padding: 8px 0;
+            font-family: var(--font-mono);
+            font-size: 0.78rem;
+            line-height: 1.7;
+        }
+        .vim-intro-line {
+            display: flex;
+        }
+        .vim-line-num {
+            color: var(--text-muted);
+            width: 28px;
+            text-align: right;
+            padding-right: 8px;
+            flex-shrink: 0;
+            user-select: none;
+            font-size: 0.72rem;
+        }
+        .vim-line-text {
+            flex: 1;
+            color: var(--text-main);
+            padding-right: 8px;
+            overflow-wrap: break-word;
+            word-break: break-word;
+        }
+        .vim-line-text strong {
+            color: var(--accent-orange);
+            font-weight: bold;
+        }
+        .vim-tilde {
+            color: var(--text-muted);
+            width: 28px;
+            text-align: right;
+            padding-right: 8px;
+            flex-shrink: 0;
+            user-select: none;
+            font-size: 0.72rem;
+        }
+        .vim-cursor {
+            display: inline-block;
+            width: 8px;
+            height: 1.2em;
+            background: var(--cursor-bg);
+            vertical-align: middle;
+            animation: blink 1s step-end infinite;
+            margin-left: 1px;
+        }
+
+        /* --- Split-Flap Board --- */
+        .flip-board-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 40px;
+        }
+
+        .flip-board {
+            display: inline-flex;
+            gap: 3px;
+            padding: 14px 18px;
+            background: #0b0b12;
+            border-radius: 6px;
+            box-shadow: 0 6px 28px rgba(0,0,0,0.75), inset 0 1px 0 rgba(255,255,255,0.04);
+        }
+
+        .flip-tile {
+            width: 26px;
+            height: 44px;
+            position: relative;
+            border-radius: 3px;
+            flex-shrink: 0;
+        }
+
+        .flip-tile::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 22px;
+            height: 1px;
+            background: #0b0b12;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .ft-upper {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 22px;
+            overflow: hidden;
+            background: #1e1e2e;
+            border-radius: 3px 3px 0 0;
+        }
+
+        .ft-lower {
+            position: absolute;
+            top: 22px; left: 0; right: 0;
+            height: 22px;
+            overflow: hidden;
+            background: #181826;
+            border-radius: 0 0 3px 3px;
+        }
+
+        .ft-upper-flap {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 22px;
+            overflow: hidden;
+            background: #1e1e2e;
+            border-radius: 3px 3px 0 0;
+            z-index: 5;
+            transform-origin: bottom center;
+            transform: perspective(200px) rotateX(0deg);
+        }
+
+        .ft-lower-flap {
+            position: absolute;
+            top: 22px; left: 0; right: 0;
+            height: 22px;
+            overflow: hidden;
+            background: #181826;
+            border-radius: 0 0 3px 3px;
+            z-index: 5;
+            transform-origin: top center;
+            transform: perspective(200px) rotateX(90deg);
+        }
+
+        .ft-char {
+            display: block;
+            width: 100%;
+            height: 44px;
+            line-height: 44px;
+            font-size: 20px;
+            text-align: center;
+            color: #ff9e64;
+            font-family: "Fira Code", "JetBrains Mono", "Courier New", monospace;
+            font-weight: bold;
+            letter-spacing: 0;
+            user-select: none;
+            white-space: nowrap;
+        }
+
+        .ft-lower .ft-char,
+        .ft-lower-flap .ft-char {
+            margin-top: -22px;
+        }
+
+        @keyframes ft-flip-upper {
+            0%   { transform: perspective(200px) rotateX(0deg); }
+            100% { transform: perspective(200px) rotateX(-90deg); }
+        }
+
+        @keyframes ft-flip-lower {
+            0%   { transform: perspective(200px) rotateX(90deg); }
+            100% { transform: perspective(200px) rotateX(0deg); }
+        }
+
+        .flip-subtitle {
+            font-family: var(--font-mono);
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            text-align: center;
+            transition: opacity 0.6s;
+            min-height: 1.2em;
+            letter-spacing: 0.02em;
+        }
+
+        /* --- Apple-Style Modal Overlay --- */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 3000;
+            background: rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.open {
+            display: flex;
+        }
+
+        .modal-box {
+            background: var(--nav-bg);
+            border: 1px solid var(--bg-status);
+            border-radius: 18px;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+            width: 720px;
+            max-width: 92vw;
+            max-height: 92vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            animation: modal-enter 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes modal-enter {
+            from { opacity: 0; transform: scale(0.92) translateY(12px); }
+            to   { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--bg-status);
+            background: var(--bg-status);
+            flex-shrink: 0;
+        }
+
+        .modal-traffic {
+            display: flex;
+            gap: 7px;
+        }
+
+        .modal-traffic span {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .modal-traffic .btn-close  { background: #ff5f57; }
+        .modal-traffic .btn-min    { background: #febc2e; }
+        .modal-traffic .btn-max    { background: #28c840; }
+
+        .modal-title {
+            flex: 1;
+            text-align: center;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+        }
+
+        .modal-body {
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .modal-iframe-wrap {
+            width: 100%;
+            background: #fff;
+            border-bottom: 1px solid var(--bg-status);
+        }
+
+        .modal-iframe-wrap iframe {
+            width: 100%;
+            border: none;
+            display: block;
+        }
+
+        /* --- Selected Messages Section (inside modal) --- */
+        .msg-section {
+            padding: 28px 28px 24px 28px;
+        }
+
+        .msg-section-title {
+            color: var(--accent-magenta);
+            font-size: 0.95rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .msg-section-title::before {
+            content: "## ";
+            color: var(--text-muted);
+        }
+
+        .msg-entry {
+            margin-bottom: 24px;
+            border-left: 2px solid var(--bg-status);
+            padding-left: 16px;
+        }
+
+        .msg-meta {
+            display: flex;
+            gap: 14px;
+            align-items: baseline;
+            margin-bottom: 4px;
+        }
+
+        .msg-date {
+            color: var(--accent-green);
+            font-size: 0.78rem;
+        }
+
+        .msg-author {
+            color: var(--accent-blue);
+            font-size: 0.85rem;
+        }
+
+        .msg-body {
+            color: var(--text-main);
+            font-size: 0.85rem;
+            line-height: 1.6;
+            padding-left: 0;
+        }
+
+        .msg-replies {
+            margin-top: 10px;
+            padding-left: 20px;
+            border-left: 1px dashed var(--bg-status);
+        }
+
+        .msg-reply {
+            margin-bottom: 8px;
+        }
+
+        .msg-reply-meta {
+            display: flex;
+            gap: 10px;
+            align-items: baseline;
+            margin-bottom: 2px;
+        }
+
+        .msg-reply-indicator {
+            color: var(--text-muted);
+            font-size: 0.78rem;
+        }
+
+        .msg-reply-author {
+            color: var(--accent-magenta);
+            font-size: 0.82rem;
+        }
+
+        .msg-reply-date {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .msg-reply-body {
+            color: var(--text-main);
+            font-size: 0.82rem;
+            line-height: 1.55;
+            opacity: 0.85;
+        }
+
+        .msg-divider {
+            border: none;
+            border-top: 1px solid var(--bg-status);
+            margin: 20px 0;
+        }
+
+        @media (max-width: 768px) {
+            .left-panel {
+                position: static;
+                width: 100%;
+                height: auto;
+                border-right: none;
+                border-bottom: 1px solid var(--bg-status);
+                flex-direction: row;
+                flex-wrap: wrap;
+                gap: 12px;
+                padding: 16px;
+            }
+            .left-panel .avatar-box {
+                width: 100px;
+                aspect-ratio: 1 / 1;
+                align-self: auto;
+            }
+            .left-panel .screen-box {
+                width: 100%;
+            }
+            .container {
+                margin-left: 0;
+                padding: 40px 20px;
+            }
+            .pub-card { flex-direction: column; }
+            .pub-cover { width: 100%; height: 180px; }
+            .nav-links { overflow-x: auto; }
+            .fixed-btn-group { bottom: 60px; right: 20px; }
+            .flip-board { padding: 10px 12px; gap: 2px; }
+            .flip-tile { width: 20px; height: 36px; }
+            .flip-tile::after { top: 18px; }
+            .ft-upper { height: 18px; }
+            .ft-lower { top: 18px; height: 18px; }
+            .ft-upper-flap { height: 18px; }
+            .ft-lower-flap { top: 18px; height: 18px; }
+            .ft-char { height: 36px; line-height: 36px; font-size: 16px; }
+            .ft-lower .ft-char, .ft-lower-flap .ft-char { margin-top: -18px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Fixed Button Group -->
+    <div class="fixed-btn-group">
+        <div class="fixed-btn" id="msgBtn" title="Leave a Message">MSG</div>
+        <div class="fixed-btn" id="themeBtn" title="Toggle Theme">THEME</div>
+    </div>
+
+    <!-- Apple-Style Message Modal -->
+    <div class="modal-overlay" id="msgModal">
+        <div class="modal-box" id="msgBox">
+            <div class="modal-header">
+                <div class="modal-traffic">
+                    <span class="btn-close" id="modalClose"></span>
+                    <span class="btn-min"></span>
+                    <span class="btn-max"></span>
+                </div>
+                <div class="modal-title">messages -- wjx.top/vm/Ygd42AJ.aspx</div>
+            </div>
+            <div class="modal-body">
+                <div class="modal-iframe-wrap">
+                    <iframe
+                        id="msgIframe"
+                        src="https://www.wjx.top/vm/Ygd42AJ.aspx#"
+                        title="Message Form"
+                        scrolling="no"
+                        allowfullscreen>
+                    </iframe>
+                </div>
+                <!-- Selected Messages -->
+                <div class="msg-section">
+                    <div class="msg-section-title">Selected_Messages</div>
+
+                    <div class="msg-entry">
+                        <div class="msg-meta">
+                            <span class="msg-date">2025.12.08</span>
+                            <span class="msg-author">Anonymous</span>
+                        </div>
+                        <div class="msg-body">
+                            Congratulations on the AAAI 2026 acceptance! The idea of using Deep Evidential Regression for dataset pruning in materials science is genuinely novel. Looking forward to reading the full paper.
+                        </div>
+                        <div class="msg-replies">
+                            <div class="msg-reply">
+                                <div class="msg-reply-meta">
+                                    <span class="msg-reply-indicator">|--</span>
+                                    <span class="msg-reply-author">Xiean Wang</span>
+                                    <span class="msg-reply-date">2025.12.09</span>
+                                </div>
+                                <div class="msg-reply-body">
+                                    Thank you so much. The full paper is now available on the AAAI proceedings page. Feel free to reach out if you have any questions.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="msg-divider">
+
+                    <div class="msg-entry">
+                        <div class="msg-meta">
+                            <span class="msg-date">2025.10.14</span>
+                            <span class="msg-author">PhD_Applicant_2027</span>
+                        </div>
+                        <div class="msg-body">
+                            Hi Sean, I am also applying for 2027 entry with a background in computational chemistry. Would you be open to exchanging experiences about the application process and advisor selection?
+                        </div>
+                        <div class="msg-replies">
+                            <div class="msg-reply">
+                                <div class="msg-reply-meta">
+                                    <span class="msg-reply-indicator">|--</span>
+                                    <span class="msg-reply-author">Xiean Wang</span>
+                                    <span class="msg-reply-date">2025.10.15</span>
+                                </div>
+                                <div class="msg-reply-body">
+                                    Of course. Feel free to send an email directly to academic@tetean.com and we can set up a time to talk. Good luck with the applications.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <nav>
+        <ul class="nav-links">
+            <li><a href="#news" class="active">1:news.log</a></li>
+            <li><a href="#publications">2:publications.bib</a></li>
+            <li><a href="#awards">3:awards.txt</a></li>
+            <li><a href="#services">4:services.md</a></li>
+            <li><a href="#education">5:education.md</a></li>
+            <li><a href="#contact">6:contact.sh</a></li>
+        </ul>
+    </nav>
+
+    <!-- Fixed Left Sidebar -->
+    <div class="left-panel" id="leftPanel">
+        <div class="avatar-box">
+            <img src="https://raw.githubusercontent.com/tetean/image-host/main/notion_pic/202603211816433.jpg" alt="Profile">
+        </div>
+        <div class="bio-info-list">
+            <span class="label">name:</span><span>Xiean Wang (Sean)</span>
+            <span class="label">role:</span><span>M.S. Student | Ph.D. Applicant</span>
+            <span class="label">dept:</span><span>Sun Yat-sen University (SYSU)</span>
+            <span class="label">email:</span><span><a href="mailto:wangxan@mail2.sysu.edu.cn">wangxan@mail2.sysu.edu.cn</a></span>
+            <span class="label">links:</span><span>[<a href="https://github.com/tetean">GitHub</a>] [<a href="https://openreview.net/profile?id=%7EXiean_Wang1">Open Review</a>]</span>
+        </div>
+        <div class="screen-box">
+            <div class="screen-header">
+                <div class="screen-dots"><span></span><span></span><span></span></div>
+                <span>intro.txt</span>
+            </div>
+            <div id="vim-intro"></div>
+        </div>
+    </div>
+
+    <div class="container">
+
+        <!-- Split-Flap Board -->
+        <div class="flip-board-container">
+            <div class="flip-board" id="flipBoard"></div>
+            <div class="flip-subtitle" id="flipSubtitle"></div>
+        </div>
+
+        <div id="content"></div>
+
+        <footer style="margin-top: 80px; opacity: 0.3; font-size: 0.7rem; text-align: center;">
+            <p>Copyright 2022-2026 Xiean Wang. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <div class="status-line">
+        <div class="status-left">
+            <div class="mode" id="vimMode">NORMAL</div>
+            <div class="file-path" id="filePath">academic_path/news.log [+]</div>
+            <span class="cursor"></span>
+        </div>
+        <div class="status-right">
+            <span id="statusRight">utf-8 | profile | Xiean (Sean) Wang | 0%</span>
+        </div>
+    </div>
+
+    <script>
+        marked.setOptions({ breaks: true, gfm: true });
+
+        function stripLineComments(text) {
+            return text
+                .split('\n')
+                .filter(function(line) { return !/^\s*\/\//.test(line); })
+                .join('\n');
+        }
+
+        function highlightPunctuation(html) {
+            return html.replace(/(?![^<]*>)([.,$|\[\](){}:])/g, '<span class="punct">$1</span>');
+        }
+
+        var sectionFileMap = {
+            'news':         'news.log',
+            'publications': 'publications.bib',
+            'awards':       'awards.txt',
+            'services':     'services.md',
+            'education':    'education.md',
+            'contact':      'contact.sh'
+        };
+
+        var markdownData = `
+<section id="news">
+<h2>News</h2>
+<ul class="vim-list">
+  <li><div class="ni"><span class="nd">2025.11</span><span class="nt"><a href="https://ojs.aaai.org/index.php/AAAI/article/view/39863" target="_blank">FUSION</a> is accepted by AAAI 2026!</span></div></li>
+  <li><div class="ni"><span class="nd">2025.05</span><span class="nt"><a href="https://link.springer.com/chapter/10.1007/978-981-96-9815-8_26" target="_blank">CSP-Gym</a> is accepted by ICIC 2025!</span></div></li>
+  <li><div class="ni"><span class="nd">2025.03</span><span class="nt">Research Intern at National Supercomputer Center in Guangzhou (NSCC-GZ), working with <a href="https://openreview.net/profile?id=~Pin_Chen1" target="_blank">Pin Chen</a>. He is one of the kindest and most approachable collaborators I have worked with.</span></div></li>
+</ul>
+</section>
+
+<section id="publications">
+<h2>Selected_Publications</h2>
+
+<div class="pub-card">
+  <div class="pub-cover">
+    <img src="https://raw.githubusercontent.com/tetean/FUSION/main/properties/FUSION.png" alt="FUSION Cover">
+  </div>
+  <div class="pub-info">
+    <strong>FUSION: Dataset Pruning via Fusing Uncertainty with Structural Information for Optimal Neural Training in Crystal Property Prediction</strong>
+    <span class="comment">Xiean Wang, et al. | AAAI 2026</span>
+    <p>Proposed an offline dataset pruning strategy for crystal property prediction using Deep Evidential Regression and SOAP descriptors.</p>
+    [<a href="https://ojs.aaai.org/index.php/AAAI/article/view/39863">Paper</a>] [<a href="https://github.com/tetean/FUSION">Code</a>]
+  </div>
+</div>
+
+<div class="pub-card">
+  <div class="pub-cover">
+    <img src="https://raw.githubusercontent.com/tetean/CSP-Gym/master/properties/cover.png" alt="CSP-Gym Cover">
+  </div>
+  <div class="pub-info">
+    <strong>No-Data-Driven Crystal Structure Prediction via Model-Free Reinforcement Learning</strong>
+    <span class="comment">Xiean Wang, et al. | ICIC 2025</span>
+    <p>CSP-Gym is a model-free reinforcement learning environment for crystal structure prediction that dynamically explores low-energy configurations without pre-collected datasets.</p>
+    [<a href="https://link.springer.com/chapter/10.1007/978-981-96-9815-8_26">Paper</a>] [<a href="https://github.com/tetean/CSP-Gym">Code</a>] [<a href="https://cspgym.tetean.com/">Docs</a>]
+  </div>
+</div>
+
+</section>
+
+<!--
+<div class="pub-card">
+  <div class="pub-cover">
+    <img src="https://api.dicebear.com/7.x/identicon/svg?seed=csp" alt="CSP Cover">
+  </div>
+  <div class="pub-info">
+    <strong>CSP-CPP Benchmark: Evaluating Crystal Structure Generation</strong>
+    <span class="comment">Xiean Wang, et al. | Targeting NeurIPS 2026 (CCF A)</span>
+    <p>Introduced a benchmark addressing the gap between geometric fidelity and practical utility in crystal generation.</p>
+  </div>
+</div>
+-->
+
+<section id="awards">
+<h2>Selected_Awards</h2>
+<ul class="vim-list">
+  <li>Research Intern @ National Supercomputer Center in Guangzhou (NSCC-GZ), 2025</li>
+  <li>Silver Award, 3rd Greater Bay Area Cup AI for Science Technology Competition</li>
+  <li>First Class Scholarship, Jilin University (Top 15% academic performance)</li>
+  <li>National Third Prize, Blue Bridge Cup Python Group</li>
+  <li>Jilin Province Second Prize, China Undergraduate Mathematical Contest in Modeling</li>
+</ul>
+</section>
+
+<section id="services">
+<h2>Academic_Services</h2>
+<h3>Reviewers / PC Members</h3>
+<ul>
+  <li>Reviewer for AAAI 2026, NeurIPS 2025.</li>
+  <li>Program Committee Member for several AI4Science workshops.</li>
+</ul>
+<h3>Teaching</h3>
+<ul>
+  <li>Teaching Assistant for Mathematical Analysis II, Sun Yat-sen University (South Campus), Spring Semester, 2024-2025.</li>
+</ul>
+</section>
+
+<section id="education">
+<h2>Education_History</h2>
+<ul>
+  <li>
+    <strong>M.S. in Computational Mathematics</strong> | 2024 - Present<br>
+    School of Computer Science and Engineering, Sun Yat-sen University<br>
+    <span class="comment">Supervised by <a href="https://www.zouqingsong.com/publications/" target="_blank" style="text-decoration: none;">Prof. Qingsong Zou</a> </span>
+  </li>
+  <li>
+    <strong>B.S. in Computer Science</strong> | 2020 - 2024<br>
+    College of Computer Science and Technology, Jilin University<br>
+  </li>
+</ul>
+</section>
+
+<section id="contact">
+<h2>Contact_Info</h2>
+<ul>
+  <li><strong>Office</strong>: Room A510, Computer Science Building, East Campus, Sun Yat-sen University, Guangzhou, China</li>
+  <li><strong>Email</strong>: <a href="mailto:academic@tetean.com">academic@tetean.com</a> and <a href="mailto:wangxan@mail2.sysu.edu.cn">wangxan@mail2.sysu.edu.cn</a></li>
+  <li><strong>Status</strong>: Seeking Ph.D. positions globally for 2027 entry.</li>
+</ul>
+</section>
+`;
+
+        // =====================================================================
+        // VIM TYPEWRITER
+        // =====================================================================
+
+        function boldToHtml(text) {
+            return text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+        }
+
+        function wrapText(lines, maxChars) {
+            var result = [];
+            for (var i = 0; i < lines.length; i++) {
+                var words = lines[i].split(' ');
+                var current = '';
+                for (var j = 0; j < words.length; j++) {
+                    var word = words[j];
+                    if (current === '') {
+                        current = word;
+                    } else if (current.length + 1 + word.length <= maxChars) {
+                        current += ' ' + word;
+                    } else {
+                        result.push(current);
+                        current = word;
+                    }
+                }
+                if (current !== '') { result.push(current); }
+            }
+            return result;
+        }
+
+        function getIntroCharsPerLine() {
+            var panel = document.getElementById('leftPanel');
+            if (!panel) { return 28; }
+            var probe = document.createElement('span');
+            probe.style.cssText = 'visibility:hidden;position:absolute;font-family:"Fira Code","JetBrains Mono","Courier New",monospace;font-size:0.78rem;white-space:nowrap;';
+            probe.textContent = 'X';
+            document.body.appendChild(probe);
+            var charW = probe.getBoundingClientRect().width || 6.6;
+            document.body.removeChild(probe);
+            var panelW = panel.getBoundingClientRect().width;
+            var lineNumW = 36;
+            var paddingW = 44;
+            var available = panelW - lineNumW - paddingW;
+            return Math.max(20, Math.floor(available / charW));
+        }
+
+        var vimData = {
+            lines: [
+                "I am a Master's student at SYSU, focusing on AI for Science, including computational materials science, graph-based modeling, and uncertainty-aware learning. Seeking Ph.D. positions for 2027."
+            ],
+            fullText: '',
+            charIdx: 0,
+            done: false,
+            started: false,
+            timer: null,
+            observer: null
+        };
+
+        function rebuildVimIntro() {
+            var el = document.getElementById('vim-intro');
+            if (!el) return;
+
+            var html = '<div class="vim-intro">';
+
+            if (!vimData.started) {
+                for (var t = 0; t < 4; t++) {
+                    html += '<div class="vim-intro-line">' +
+                        '<span class="vim-tilde">~</span>' +
+                        '<span class="vim-line-text"></span>' +
+                        '</div>';
+                }
+            } else {
+                var typed = vimData.fullText.substring(0, vimData.charIdx);
+                var typedLines = typed.split('\n');
+
+                for (var i = 0; i < typedLines.length; i++) {
+                    var isLast = (i === typedLines.length - 1);
+                    html += '<div class="vim-intro-line">' +
+                        '<span class="vim-line-num">' + (i + 1) + '</span>' +
+                        '<span class="vim-line-text" id="vim-text-' + i + '">' +
+                        typedLines[i] +
+                        (isLast && !vimData.done ? '<span class="vim-cursor"></span>' : '') +
+                        '</span>' +
+                        '</div>';
+                }
+
+                var tildeCount = Math.max(0, 5 - typedLines.length);
+                if (tildeCount > 4) { tildeCount = 4; }
+                for (var j = 0; j < tildeCount; j++) {
+                    html += '<div class="vim-intro-line">' +
+                        '<span class="vim-tilde">~</span>' +
+                        '<span class="vim-line-text"></span>' +
+                        '</div>';
+                }
+            }
+
+            html += '</div>';
+            el.innerHTML = html;
+        }
+
+        function typeStep() {
+            if (vimData.charIdx >= vimData.fullText.length) {
+                vimData.done = true;
+                rebuildVimIntro();
+                return;
+            }
+
+            var ch = vimData.fullText[vimData.charIdx];
+
+            if (ch === '<') {
+                while (vimData.charIdx < vimData.fullText.length && vimData.fullText[vimData.charIdx] !== '>') {
+                    vimData.charIdx++;
+                }
+                vimData.charIdx++;
+                vimData.timer = setTimeout(typeStep, 1);
+                return;
+            }
+
+            vimData.charIdx++;
+
+            if (ch === '\n') {
+                rebuildVimIntro();
+                vimData.timer = setTimeout(typeStep, 150);
+            } else {
+                var typed = vimData.fullText.substring(0, vimData.charIdx);
+                var typedLines = typed.split('\n');
+                var lastIdx = typedLines.length - 1;
+                var lastLineEl = document.getElementById('vim-text-' + lastIdx);
+                if (lastLineEl) {
+                    lastLineEl.innerHTML = typedLines[lastIdx] + '<span class="vim-cursor"></span>';
+                }
+                vimData.timer = setTimeout(typeStep, 20);
+            }
+        }
+
+        function startVimTyping() {
+            if (vimData.started) return;
+            vimData.started = true;
+            rebuildVimIntro();
+            vimData.timer = setTimeout(typeStep, 300);
+        }
+
+        function setupVimObserver() {
+            if (vimData.observer) {
+                vimData.observer.disconnect();
+                vimData.observer = null;
+            }
+            var introEl = document.getElementById('vim-intro');
+            if (!introEl) return;
+            var statusCursor = document.querySelector('.cursor');
+
+            vimData.observer = new IntersectionObserver(function(entries) {
+                var entry = entries[0];
+                if (entry.isIntersecting) {
+                    if (statusCursor) { statusCursor.classList.add('cursor-paused'); }
+                    startVimTyping();
+                } else {
+                    if (statusCursor) { statusCursor.classList.remove('cursor-paused'); }
+                }
+            }, { threshold: 0.1 });
+
+            vimData.observer.observe(introEl);
+        }
+
+        // =====================================================================
+        // IFRAME AUTO-HEIGHT
+        // =====================================================================
+
+        window.addEventListener('message', function(e) {
+            var iframe = document.getElementById('msgIframe');
+            if (!iframe) return;
+            var data = e.data;
+            var height = null;
+            if (typeof data === 'number') {
+                height = data;
+            } else if (data && typeof data === 'object') {
+                height = data.height || data.frameHeight || data.contentHeight || null;
+            } else if (typeof data === 'string') {
+                var parsed = parseInt(data, 10);
+                if (!isNaN(parsed) && parsed > 0) { height = parsed; }
+            }
+            if (height && height > 0) {
+                iframe.style.height = height + 'px';
+            }
+        });
+
+        document.getElementById('msgIframe').addEventListener('load', function() {
+            this.style.height = '1100px';
+        });
+
+        // =====================================================================
+        // SPLIT-FLAP BOARD
+        // =====================================================================
+
+        var TILE_COUNT = 22;
+        var flipTiles  = [];
+        var lastFlipText = '';
+
+        var FESTIVALS = [
+            {
+                fixed: true, month: 1, day: 1,
+                short: 'HAPPY NEW YEAR',
+                full: 'May the New Year bring you fresh beginnings and endless possibilities.'
+            },
+            {
+                fixed: true, month: 5, day: 1,
+                short: 'HAPPY LABOR DAY',
+                full: 'Honoring your hard work - may your efforts always bring you success and fulfillment.'
+            },
+            {
+                fixed: true, month: 10, day: 31,
+                short: 'HAPPY HALLOWEEN',
+                full: 'Wishing you a fun and spooky Halloween filled with surprises and laughter.'
+            },
+            {
+                fixed: true, month: 12, day: 25,
+                short: 'MERRY CHRISTMAS',
+                full: 'Wishing you peace, joy, and love this Christmas and always.'
+            },
+            {
+                thanksgiving: true,
+                short: 'HAPPY THANKSGIVING',
+                full: 'May your heart be full of gratitude and your home full of warmth.'
+            },
+            {
+                dates: [
+                    [2026,2,17],[2027,2,6],[2028,1,26],[2029,2,13],[2030,2,3],
+                    [2031,1,23],[2032,2,11],[2033,1,31],[2034,2,19],[2035,2,8],
+                    [2036,1,28],[2037,2,15],[2038,2,4],[2039,1,24],[2040,2,12],
+                    [2041,2,1],[2042,1,22],[2043,2,10],[2044,1,30],[2045,2,17],
+                    [2046,2,6]
+                ],
+                short: 'HAPPY SPRING FESTIVAL',
+                full: 'Wishing you a prosperous New Year filled with happiness, health, and success.'
+            },
+            {
+                dates: [
+                    [2026,3,3],[2027,2,20],[2028,2,9],[2029,2,27],[2030,2,17],
+                    [2031,2,6],[2032,2,25],[2033,2,14],[2034,3,5],[2035,2,22],
+                    [2036,2,11],[2037,3,1],[2038,2,18],[2039,2,7],[2040,2,26],
+                    [2041,2,15],[2042,2,5],[2043,2,24],[2044,2,13],[2045,3,3],
+                    [2046,2,20]
+                ],
+                short: 'HAPPY LANTERN FESTIVAL',
+                full: 'May the lanterns light your way to joy, reunion, and sweet moments.'
+            },
+            {
+                dates: [
+                    [2026,9,25],[2027,9,15],[2028,10,3],[2029,9,22],[2030,9,12],
+                    [2031,10,1],[2032,9,20],[2033,9,8],[2034,9,27],[2035,9,16],
+                    [2036,10,4],[2037,9,24],[2038,9,13],[2039,10,2],[2040,9,20],
+                    [2041,9,9],[2042,9,28],[2043,9,17],[2044,10,5],[2045,9,25],
+                    [2046,9,15]
+                ],
+                short: 'HAPPY MID-AUTUMN',
+                full: 'May the full moon bring you peace, happiness, and family togetherness.'
+            },
+            {
+                fixed: true, month: 10, day: 1,
+                short: 'HAPPY NATIONAL DAY',
+                full: 'Wishing prosperity to the nation and happiness to you and your loved ones.'
+            }
+        ];
+
+        function getThanksgivingDay(year) {
+            var nov1 = new Date(year, 10, 1);
+            var dow = nov1.getDay();
+            var firstThu = (4 - dow + 7) % 7 + 1;
+            return firstThu + 21;
+        }
+
+        function dayDiff(fy, fm, fd) {
+            var now = new Date();
+            var nowDate  = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            var festDate = new Date(fy, fm - 1, fd);
+            return (nowDate - festDate) / 86400000;
+        }
+
+        function getCurrentFestival() {
+            var now   = new Date();
+            var year  = now.getFullYear();
+
+            for (var i = 0; i < FESTIVALS.length; i++) {
+                var f = FESTIVALS[i];
+                var matched = false;
+
+                if (f.thanksgiving) {
+                    var td   = getThanksgivingDay(year);
+                    var diff = dayDiff(year, 11, td);
+                    matched  = diff >= -1 && diff <= 3;
+                } else if (f.fixed) {
+                    var diff = dayDiff(year, f.month, f.day);
+                    matched  = diff >= -1 && diff <= 3;
+                } else if (f.dates) {
+                    for (var j = 0; j < f.dates.length; j++) {
+                        var d    = f.dates[j];
+                        var diff = dayDiff(d[0], d[1], d[2]);
+                        if (diff >= -1 && diff <= 3) { matched = true; break; }
+                    }
+                }
+
+                if (matched) return f;
+            }
+            return null;
+        }
+
+        function getTimezoneAbbr() {
+            var parts = Intl.DateTimeFormat([], { timeZoneName: 'short' }).formatToParts(new Date());
+            for (var i = 0; i < parts.length; i++) {
+                if (parts[i].type === 'timeZoneName') { return parts[i].value; }
+            }
+            return '';
+        }
+
+        function getDateDisplay() {
+            var now   = new Date();
+            var days  = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+            var dname = days[now.getDay()];
+            var y     = now.getFullYear().toString();
+            var mo    = String(now.getMonth() + 1).padStart(2, '0');
+            var d     = String(now.getDate()).padStart(2, '0');
+            var h     = String(now.getHours()).padStart(2, '0');
+            var mi    = String(now.getMinutes()).padStart(2, '0');
+            return dname + ' ' + y + '-' + mo + '-' + d + ' ' + h + ':' + mi;
+        }
+
+        function padCenter(text, len) {
+            if (text.length >= len) return text.substring(0, len);
+            var left  = Math.floor((len - text.length) / 2);
+            var right = len - text.length - left;
+            return ' '.repeat(left) + text + ' '.repeat(right);
+        }
+
+        function getDisplayText() {
+            var festival = getCurrentFestival();
+            if (festival) {
+                return { text: padCenter(festival.short, TILE_COUNT), sub: festival.full };
+            }
+            var tz = getTimezoneAbbr();
+            return {
+                text: padCenter(getDateDisplay(), TILE_COUNT),
+                sub: tz ? 'local time (' + tz + ')' : ''
+            };
+        }
+
+        function createFlipTile(boardEl) {
+            var el = document.createElement('div');
+            el.className = 'flip-tile';
+            el.innerHTML =
+                '<div class="ft-upper"><span class="ft-char"> </span></div>' +
+                '<div class="ft-lower"><span class="ft-char"> </span></div>' +
+                '<div class="ft-upper-flap"><span class="ft-char"> </span></div>' +
+                '<div class="ft-lower-flap"><span class="ft-char"> </span></div>';
+            boardEl.appendChild(el);
+
+            var upperSt = el.querySelector('.ft-upper .ft-char');
+            var lowerSt = el.querySelector('.ft-lower .ft-char');
+            var ufEl    = el.querySelector('.ft-upper-flap');
+            var lfEl    = el.querySelector('.ft-lower-flap');
+            var ufCh    = el.querySelector('.ft-upper-flap .ft-char');
+            var lfCh    = el.querySelector('.ft-lower-flap .ft-char');
+
+            var current   = ' ';
+            var animating = false;
+
+            return {
+                setChar: function(newChar) {
+                    if (newChar === current || animating) return;
+                    var old   = current;
+                    current   = newChar;
+                    animating = true;
+
+                    upperSt.textContent = newChar;
+
+                    ufCh.textContent = old;
+                    lfCh.textContent = newChar;
+
+                    ufEl.style.animation = 'none';
+                    lfEl.style.animation = 'none';
+                    lfEl.style.transform = 'perspective(200px) rotateX(90deg)';
+                    ufEl.offsetHeight;
+
+                    ufEl.style.animation = 'ft-flip-upper 0.2s ease-in forwards';
+
+                    setTimeout(function() {
+                        lfEl.style.animation = 'ft-flip-lower 0.2s ease-out forwards';
+
+                        setTimeout(function() {
+                            lowerSt.textContent = newChar;
+                            ufCh.textContent = newChar;
+                            ufEl.style.animation = 'none';
+                            lfEl.style.animation = 'none';
+                            lfEl.style.transform = 'perspective(200px) rotateX(90deg)';
+                            animating = false;
+                        }, 200);
+                    }, 160);
+                }
+            };
+        }
+
+        function initFlipBoard() {
+            var boardEl = document.getElementById('flipBoard');
+            for (var i = 0; i < TILE_COUNT; i++) {
+                flipTiles.push(createFlipTile(boardEl));
+            }
+            updateFlipBoard();
+            setInterval(updateFlipBoard, 1000);
+        }
+
+        function updateFlipBoard() {
+            var result = getDisplayText();
+            var text   = result.text;
+
+            if (text === lastFlipText) return;
+            lastFlipText = text;
+
+            var subEl = document.getElementById('flipSubtitle');
+            if (subEl) {
+                subEl.textContent = result.sub;
+                subEl.style.opacity = result.sub ? '1' : '0';
+            }
+
+            for (var i = 0; i < TILE_COUNT; i++) {
+                (function(idx, ch) {
+                    setTimeout(function() {
+                        flipTiles[idx].setChar(ch);
+                    }, idx * 35);
+                })(i, text[i] || ' ');
+            }
+        }
+
+        // =====================================================================
+        // PAGE INIT
+        // =====================================================================
+
+        window.onload = function() {
+            var contentElement = document.getElementById('content');
+            var themeBtn       = document.getElementById('themeBtn');
+            var vimMode        = document.getElementById('vimMode');
+            var filePathEl     = document.getElementById('filePath');
+            var statusRightEl  = document.getElementById('statusRight');
+            var msgBtn         = document.getElementById('msgBtn');
+            var msgModal       = document.getElementById('msgModal');
+            var modalClose     = document.getElementById('modalClose');
+
+            var charsPerLine = getIntroCharsPerLine();
+            var wrappedLines = wrapText(vimData.lines, charsPerLine);
+            vimData.fullText = wrappedLines.map(boldToHtml).join('\n');
+
+            function render() {
+                var renderedHtml = marked.parse(stripLineComments(markdownData));
+                contentElement.innerHTML = highlightPunctuation(renderedHtml);
+                rebuildVimIntro();
+                setupVimObserver();
+            }
+
+            function getScrollPercent() {
+                var scrollTop = window.scrollY;
+                var docHeight = document.body.scrollHeight - window.innerHeight;
+                if (docHeight <= 0) return 0;
+                return Math.round((scrollTop / docHeight) * 100);
+            }
+
+            function updateStatus(sectionId) {
+                var fileName = sectionFileMap[sectionId] || 'news.log';
+                filePathEl.textContent = 'academic_path/' + fileName + ' [+]';
+                var pct = getScrollPercent();
+                statusRightEl.textContent = 'utf-8 | profile | Xiean (Sean) Wang | ' + pct + '%';
+            }
+
+            render();
+            initFlipBoard();
+
+            themeBtn.onclick = function() {
+                document.body.classList.toggle('light-mode');
+                var isLight = document.body.classList.contains('light-mode');
+                vimMode.textContent = isLight ? 'BRIGHT' : 'NORMAL';
+                render();
+            };
+
+            msgBtn.onclick = function() {
+                msgModal.classList.add('open');
+            };
+
+            function closeModal() {
+                msgModal.classList.remove('open');
+            }
+
+            modalClose.onclick = closeModal;
+
+            msgModal.addEventListener('click', function(e) {
+                if (e.target === msgModal) { closeModal(); }
+            });
+
+            var navLinks = document.querySelectorAll('.nav-links a');
+            navLinks.forEach(function(link) {
+                link.onclick = function() {
+                    navLinks.forEach(function(l) { l.classList.remove('active'); });
+                    this.classList.add('active');
+                };
+            });
+
+            var currentSection = 'news';
+
+            window.addEventListener('scroll', function() {
+                var sections = document.querySelectorAll('section');
+                var found = '';
+                sections.forEach(function(section) {
+                    if (section.getBoundingClientRect().top <= window.innerHeight * 0.5) {
+                        found = section.getAttribute('id');
+                    }
+                });
+
+                var atBottom = (window.scrollY + window.innerHeight) >= document.body.scrollHeight - 10;
+                if (atBottom) { found = 'contact'; }
+
+                if (found) { currentSection = found; }
+
+                navLinks.forEach(function(link) {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href') === '#' + currentSection) {
+                        link.classList.add('active');
+                    }
+                });
+
+                updateStatus(currentSection);
+            });
+
+            updateStatus('news');
+        };
+    </script>
+</body>
+</html>
