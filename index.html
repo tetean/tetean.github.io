@@ -5,7 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Xiean Wang's Homepage</title>
     <link rel="icon" type="image/x-icon" href="https://raw.githubusercontent.com/tetean/image-host/main/notion_pic/favicon.ico">
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="preconnect" href="https://raw.githubusercontent.com">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
     <style>
         /* --- CSS Variables & Themes --- */
         :root {
@@ -737,7 +739,6 @@
                 <div class="modal-iframe-wrap">
                     <iframe
                         id="msgIframe"
-                        src="https://www.wjx.top/vm/Ygd42AJ.aspx#"
                         title="Message Form"
                         scrolling="no"
                         allowfullscreen>
@@ -857,7 +858,13 @@
     </div>
 
     <script>
-        marked.setOptions({ breaks: true, gfm: true });
+        // =====================================================================
+        // MARKED SETUP
+        // =====================================================================
+
+        function initMarked() {
+            marked.setOptions({ breaks: true, gfm: true });
+        }
 
         function stripLineComments(text) {
             return text
@@ -980,6 +987,24 @@
 `;
 
         // =====================================================================
+        // TYPO EFFECT HELPERS
+        // =====================================================================
+
+        function randomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function randomTypoWord() {
+            var chars = 'abcdefghijklmnoprstuvwxy';
+            var len = randomInt(3, 6);
+            var w = '';
+            for (var i = 0; i < len; i++) {
+                w += chars[Math.floor(Math.random() * chars.length)];
+            }
+            return w;
+        }
+
+        // =====================================================================
         // VIM TYPEWRITER
         // =====================================================================
 
@@ -1030,6 +1055,13 @@
             ],
             fullText: '',
             charIdx: 0,
+            // typo effect state
+            typoSuffix: '',       // extra wrong characters currently displayed
+            typoPhase: 'normal',  // 'normal' | 'typo_type' | 'typo_back'
+            typoWord: '',         // the random wrong word being typed
+            typoPos: 0,           // position within typoWord during typing phase
+            wordCount: 0,         // number of word boundaries (spaces) passed
+            nextTypoAt: 0,        // wordCount threshold at which next typo triggers
             done: false,
             started: false,
             timer: null,
@@ -1050,7 +1082,8 @@
                         '</div>';
                 }
             } else {
-                var typed = vimData.fullText.substring(0, vimData.charIdx);
+                // Append typoSuffix to show wrong characters inline
+                var typed = vimData.fullText.substring(0, vimData.charIdx) + vimData.typoSuffix;
                 var typedLines = typed.split('\n');
 
                 for (var i = 0; i < typedLines.length; i++) {
@@ -1078,7 +1111,48 @@
             el.innerHTML = html;
         }
 
+        // Fast path: update only the last visible line without full rebuild
+        function updateLastLine() {
+            var typed = vimData.fullText.substring(0, vimData.charIdx) + vimData.typoSuffix;
+            var typedLines = typed.split('\n');
+            var lastIdx = typedLines.length - 1;
+            var lastLineEl = document.getElementById('vim-text-' + lastIdx);
+            if (lastLineEl) {
+                lastLineEl.innerHTML = typedLines[lastIdx] + '<span class="vim-cursor"></span>';
+            }
+        }
+
         function typeStep() {
+            // --- typo_type phase: type one character of the wrong word ---
+            if (vimData.typoPhase === 'typo_type') {
+                if (vimData.typoPos < vimData.typoWord.length) {
+                    vimData.typoSuffix += vimData.typoWord[vimData.typoPos];
+                    vimData.typoPos++;
+                    updateLastLine();
+                    vimData.timer = setTimeout(typeStep, 100);
+                } else {
+                    // Wrong word fully typed; pause before backspacing
+                    vimData.typoPhase = 'typo_back';
+                    vimData.timer = setTimeout(typeStep, 380);
+                }
+                return;
+            }
+
+            // --- typo_back phase: erase one character at a time ---
+            if (vimData.typoPhase === 'typo_back') {
+                if (vimData.typoSuffix.length > 0) {
+                    vimData.typoSuffix = vimData.typoSuffix.slice(0, -1);
+                    updateLastLine();
+                    vimData.timer = setTimeout(typeStep, 55);
+                } else {
+                    // Fully erased; resume normal typing with a brief pause
+                    vimData.typoPhase = 'normal';
+                    vimData.timer = setTimeout(typeStep, 130);
+                }
+                return;
+            }
+
+            // --- normal phase ---
             if (vimData.charIdx >= vimData.fullText.length) {
                 vimData.done = true;
                 rebuildVimIntro();
@@ -1087,6 +1161,7 @@
 
             var ch = vimData.fullText[vimData.charIdx];
 
+            // Skip over HTML tags instantly (bold markers etc.)
             if (ch === '<') {
                 while (vimData.charIdx < vimData.fullText.length && vimData.fullText[vimData.charIdx] !== '>') {
                     vimData.charIdx++;
@@ -1098,17 +1173,26 @@
 
             vimData.charIdx++;
 
+            if (ch === ' ') {
+                // Count word boundary and check if a typo should be staged
+                vimData.wordCount++;
+                if (vimData.wordCount >= vimData.nextTypoAt) {
+                    vimData.nextTypoAt = vimData.wordCount + randomInt(5, 10);
+                    vimData.typoPhase = 'typo_type';
+                    vimData.typoWord = randomTypoWord();
+                    vimData.typoPos = 0;
+                    // Show the space just typed before starting the wrong word
+                    updateLastLine();
+                    vimData.timer = setTimeout(typeStep, 160);
+                    return;
+                }
+            }
+
             if (ch === '\n') {
                 rebuildVimIntro();
                 vimData.timer = setTimeout(typeStep, 500);
             } else {
-                var typed = vimData.fullText.substring(0, vimData.charIdx);
-                var typedLines = typed.split('\n');
-                var lastIdx = typedLines.length - 1;
-                var lastLineEl = document.getElementById('vim-text-' + lastIdx);
-                if (lastLineEl) {
-                    lastLineEl.innerHTML = typedLines[lastIdx] + '<span class="vim-cursor"></span>';
-                }
+                updateLastLine();
                 vimData.timer = setTimeout(typeStep, 100);
             }
         }
@@ -1414,6 +1498,8 @@
         // =====================================================================
 
         window.onload = function() {
+            initMarked();
+
             var contentElement = document.getElementById('content');
             var themeBtn       = document.getElementById('themeBtn');
             var vimMode        = document.getElementById('vimMode');
@@ -1427,9 +1513,16 @@
             var wrappedLines = wrapText(vimData.lines, charsPerLine);
             vimData.fullText = wrappedLines.map(boldToHtml).join('\n');
 
+            // Set first typo threshold: trigger after 5-10 words
+            vimData.nextTypoAt = randomInt(5, 10);
+
             function render() {
                 var renderedHtml = marked.parse(stripLineComments(markdownData));
                 contentElement.innerHTML = highlightPunctuation(renderedHtml);
+                // Lazy-load images inside the rendered content
+                contentElement.querySelectorAll('img').forEach(function(img) {
+                    img.loading = 'lazy';
+                });
                 rebuildVimIntro();
                 setupVimObserver();
             }
@@ -1458,7 +1551,13 @@
                 render();
             };
 
+            // Lazy-load the message iframe on first modal open
+            var iframeLoaded = false;
             msgBtn.onclick = function() {
+                if (!iframeLoaded) {
+                    document.getElementById('msgIframe').src = 'https://www.wjx.top/vm/Ygd42AJ.aspx#';
+                    iframeLoaded = true;
+                }
                 msgModal.classList.add('open');
             };
 
