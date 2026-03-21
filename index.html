@@ -1369,45 +1369,41 @@
             timer:       null
         };
 
-        // Character sequences for forward-only flip logic.
-        // Letters and digits each form their own closed cycle.
-        var FLIP_ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-        var FLIP_DIGIT = '0123456789';
+        // -----------------------------------------------------------------------
+        // Unified flip character sequence.
+        //
+        // All tiles share a single ordered cycle.  Flipping always advances
+        // forward (wrapping from the last character back to the first).
+        //
+        // Order:
+        //   1. Symbols  : - : . , ! ? @ # $ % ^ & * ( ) _ + = [ ] { } | / \ < > ~ ' " ` (space)
+        //   2. Digits   : 0 1 2 3 4 5 6 7 8 9
+        //   3. Uppercase: A B ... Z
+        //   4. Lowercase: a b ... z
+        //   -> wraps back to -
+        // -----------------------------------------------------------------------
+        var FLIP_SEQUENCE = '-:.,!?@#$%^&*()_+=[]{}|/\\<>~\'"`  0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+        //                                                        ^^ two spaces: one regular space, kept for readability
 
-        // Compute the forward-wrap sequence from `from` to `to`.
-        // If both chars belong to the same set (ALPHA or DIGIT), cycle forward
-        // within that set.  Otherwise return a single-step direct change.
+        // Compute the forward-wrapping sub-sequence from `from` to `to`
+        // within FLIP_SEQUENCE.  Returns an array of characters to flip
+        // through (inclusive of `to`, exclusive of `from`).
+        // If either character is absent from the sequence, falls back to a
+        // single direct step.
         function getFlipSequence(from, to) {
             if (from === to) return [];
-
-            if (FLIP_DIGIT.indexOf(from) !== -1 && FLIP_DIGIT.indexOf(to) !== -1) {
-                var fi = FLIP_DIGIT.indexOf(from);
-                var ti = FLIP_DIGIT.indexOf(to);
-                var seq = [];
-                var i = (fi + 1) % 10;
-                while (i !== ti) {
-                    seq.push(FLIP_DIGIT[i]);
-                    i = (i + 1) % 10;
-                }
-                seq.push(FLIP_DIGIT[ti]);
-                return seq;
+            var n  = FLIP_SEQUENCE.length;
+            var fi = FLIP_SEQUENCE.indexOf(from);
+            var ti = FLIP_SEQUENCE.indexOf(to);
+            if (fi === -1 || ti === -1) return [to];
+            var seq = [];
+            var i = (fi + 1) % n;
+            while (i !== ti) {
+                seq.push(FLIP_SEQUENCE[i]);
+                i = (i + 1) % n;
             }
-
-            if (FLIP_ALPHA.indexOf(from) !== -1 && FLIP_ALPHA.indexOf(to) !== -1) {
-                var fi = FLIP_ALPHA.indexOf(from);
-                var ti = FLIP_ALPHA.indexOf(to);
-                var seq = [];
-                var i = (fi + 1) % 26;
-                while (i !== ti) {
-                    seq.push(FLIP_ALPHA[i]);
-                    i = (i + 1) % 26;
-                }
-                seq.push(FLIP_ALPHA[ti]);
-                return seq;
-            }
-
-            // Cross-type or special character: single direct flip.
-            return [to];
+            seq.push(FLIP_SEQUENCE[ti]);
+            return seq;
         }
 
         // -----------------------------------------------------------------------
@@ -1445,16 +1441,12 @@
             var ufCh    = el.querySelector('.ft-upper-flap .ft-char');
             var lfCh    = el.querySelector('.ft-lower-flap .ft-char');
 
-            // Every tile starts at 'A'.  On the first setChar call the tile
-            // resets to '0' if the target is a digit, keeping the starting
-            // position within the correct character set.
-            var INIT_CHAR = 'A';
+            // All tiles start at the first character in FLIP_SEQUENCE.
+            var INIT_CHAR = FLIP_SEQUENCE[0];   // '-'
             var current   = INIT_CHAR;
-            var firstSet  = true;
             var queue     = [];
             var animating = false;
 
-            // Write the initial character to all four DOM layers immediately.
             upperSt.textContent = INIT_CHAR;
             lowerSt.textContent = INIT_CHAR;
             ufCh.textContent    = INIT_CHAR;
@@ -1509,22 +1501,6 @@
 
             return {
                 setChar: function(newChar) {
-                    // On the very first call, snap the tile's starting position to
-                    // the canonical origin for the target character's type:
-                    //   digit  -> '0'  (tile was initialised to 'A')
-                    //   letter -> 'A'  (already correct, no change needed)
-                    //   other  -> 'A'  (will produce a single direct flip)
-                    if (firstSet) {
-                        firstSet = false;
-                        if (FLIP_DIGIT.indexOf(newChar) !== -1) {
-                            current             = '0';
-                            upperSt.textContent = '0';
-                            lowerSt.textContent = '0';
-                            ufCh.textContent    = '0';
-                            lfCh.textContent    = '0';
-                        }
-                    }
-
                     var from = queue.length > 0 ? queue[queue.length - 1] : current;
                     if (newChar === from) return;
                     var seq = getFlipSequence(from, newChar);
