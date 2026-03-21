@@ -1354,159 +1354,6 @@
         var flipTiles  = [];
         var lastFlipText = '';
 
-        // Character sequences for forward-only flip logic.
-        // Letters advance A -> B -> ... -> Z -> A.
-        // Digits advance 0 -> 1 -> ... -> 9 -> 0.
-        // All other characters (space, hyphen, colon, etc.) flip directly.
-        var FLIP_ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-        var FLIP_DIGIT = '0123456789';
-
-        // Returns the ordered array of characters a tile must pass through to
-        // reach `to` starting after `from`, always moving forward in the sequence.
-        // For characters outside ALPHA or DIGIT, returns [to] (direct flip).
-        function getFlipSequence(from, to) {
-            if (from === to) return [];
-
-            if (FLIP_DIGIT.indexOf(from) !== -1 && FLIP_DIGIT.indexOf(to) !== -1) {
-                var fi = FLIP_DIGIT.indexOf(from);
-                var ti = FLIP_DIGIT.indexOf(to);
-                var seq = [];
-                var i = (fi + 1) % 10;
-                while (i !== ti) {
-                    seq.push(FLIP_DIGIT[i]);
-                    i = (i + 1) % 10;
-                }
-                seq.push(FLIP_DIGIT[ti]);
-                return seq;
-            }
-
-            if (FLIP_ALPHA.indexOf(from) !== -1 && FLIP_ALPHA.indexOf(to) !== -1) {
-                var fi = FLIP_ALPHA.indexOf(from);
-                var ti = FLIP_ALPHA.indexOf(to);
-                var seq = [];
-                var i = (fi + 1) % 26;
-                while (i !== ti) {
-                    seq.push(FLIP_ALPHA[i]);
-                    i = (i + 1) % 26;
-                }
-                seq.push(FLIP_ALPHA[ti]);
-                return seq;
-            }
-
-            return [to];
-        }
-
-        // Timing constants (ms).
-        // Intermediate steps in a multi-step sequence use the SEQ values so that
-        // e.g. a 5-step digit wrap finishes well within the next clock tick.
-        // The final (or only) flip in a sequence uses the SINGLE values, which are
-        // slightly slower than the original to satisfy the "slow down a bit" request.
-        var FLIP_SINGLE_UPPER_DUR   = 250;  // upper-flap animation duration
-        var FLIP_SINGLE_LOWER_DELAY = 200;  // delay before lower-flap starts
-        var FLIP_SINGLE_LOWER_DUR   = 250;  // lower-flap animation duration
-
-        var FLIP_SEQ_UPPER_DUR      = 90;
-        var FLIP_SEQ_LOWER_DELAY    = 70;
-        var FLIP_SEQ_LOWER_DUR      = 90;
-        var FLIP_SEQ_GAP            = 25;   // pause between consecutive steps
-
-        function createFlipTile(boardEl) {
-            var el = document.createElement('div');
-            el.className = 'flip-tile';
-            el.innerHTML =
-                '<div class="ft-upper"><span class="ft-char"> </span></div>' +
-                '<div class="ft-lower"><span class="ft-char"> </span></div>' +
-                '<div class="ft-upper-flap"><span class="ft-char"> </span></div>' +
-                '<div class="ft-lower-flap"><span class="ft-char"> </span></div>';
-            boardEl.appendChild(el);
-
-            var upperSt = el.querySelector('.ft-upper .ft-char');
-            var lowerSt = el.querySelector('.ft-lower .ft-char');
-            var ufEl    = el.querySelector('.ft-upper-flap');
-            var lfEl    = el.querySelector('.ft-lower-flap');
-            var ufCh    = el.querySelector('.ft-upper-flap .ft-char');
-            var lfCh    = el.querySelector('.ft-lower-flap .ft-char');
-
-            var current   = ' ';
-            var queue     = [];   // ordered list of characters yet to be displayed
-            var animating = false;
-
-            // Execute a single mechanical flip to newChar.
-            // isFinal controls which timing set is used (slower for the last step).
-            // onDone is called once the flip settles.
-            function doFlip(newChar, isFinal, onDone) {
-                animating = true;
-
-                var old = current;
-                current = newChar;
-
-                upperSt.textContent = newChar;
-                ufCh.textContent    = old;
-                lfCh.textContent    = newChar;
-
-                var upperDur   = isFinal ? FLIP_SINGLE_UPPER_DUR   : FLIP_SEQ_UPPER_DUR;
-                var lowerDelay = isFinal ? FLIP_SINGLE_LOWER_DELAY  : FLIP_SEQ_LOWER_DELAY;
-                var lowerDur   = isFinal ? FLIP_SINGLE_LOWER_DUR    : FLIP_SEQ_LOWER_DUR;
-
-                ufEl.style.animation = 'none';
-                lfEl.style.animation = 'none';
-                lfEl.style.transform = 'perspective(200px) rotateX(90deg)';
-                ufEl.offsetHeight; // force reflow to restart animation
-
-                ufEl.style.animation = 'ft-flip-upper ' + (upperDur / 1000) + 's ease-in forwards';
-
-                setTimeout(function() {
-                    lfEl.style.animation = 'ft-flip-lower ' + (lowerDur / 1000) + 's ease-out forwards';
-
-                    setTimeout(function() {
-                        lowerSt.textContent = newChar;
-                        ufCh.textContent    = newChar;
-                        ufEl.style.animation = 'none';
-                        lfEl.style.animation = 'none';
-                        lfEl.style.transform = 'perspective(200px) rotateX(90deg)';
-                        animating = false;
-                        onDone();
-                    }, lowerDur);
-                }, lowerDelay);
-            }
-
-            // Drain the queue one step at a time.
-            function processQueue() {
-                if (queue.length === 0) return;
-                var next    = queue.shift();
-                var isFinal = queue.length === 0; // last step gets the slower timing
-                doFlip(next, isFinal, function() {
-                    if (queue.length > 0) {
-                        setTimeout(processQueue, FLIP_SEQ_GAP);
-                    }
-                });
-            }
-
-            return {
-                // Called once per board update with the desired target character.
-                // Builds the forward-only sequence from the last pending state to
-                // newChar and starts draining if not already animating.
-                setChar: function(newChar) {
-                    // Derive the sequence starting point: the last character that
-                    // has been queued (or current if the queue is empty).
-                    var from = queue.length > 0 ? queue[queue.length - 1] : current;
-                    if (newChar === from) return;
-
-                    var seq = getFlipSequence(from, newChar);
-                    if (seq.length === 0) return;
-
-                    // Replace the pending queue with the new target sequence.
-                    // If a flip is already in progress, onDone will pick up the
-                    // new queue automatically when the current step finishes.
-                    queue = seq;
-
-                    if (!animating) {
-                        processQueue();
-                    }
-                }
-            };
-        }
-
         var FESTIVALS = [
             {
                 fixed: true, month: 1, day: 1,
@@ -1651,6 +1498,61 @@
             return {
                 text: padCenter(getDateDisplay(), TILE_COUNT),
                 sub: tz ? 'local time (' + tz + ')' : ''
+            };
+        }
+
+        function createFlipTile(boardEl) {
+            var el = document.createElement('div');
+            el.className = 'flip-tile';
+            el.innerHTML =
+                '<div class="ft-upper"><span class="ft-char"> </span></div>' +
+                '<div class="ft-lower"><span class="ft-char"> </span></div>' +
+                '<div class="ft-upper-flap"><span class="ft-char"> </span></div>' +
+                '<div class="ft-lower-flap"><span class="ft-char"> </span></div>';
+            boardEl.appendChild(el);
+
+            var upperSt = el.querySelector('.ft-upper .ft-char');
+            var lowerSt = el.querySelector('.ft-lower .ft-char');
+            var ufEl    = el.querySelector('.ft-upper-flap');
+            var lfEl    = el.querySelector('.ft-lower-flap');
+            var ufCh    = el.querySelector('.ft-upper-flap .ft-char');
+            var lfCh    = el.querySelector('.ft-lower-flap .ft-char');
+
+            var current   = ' ';
+            var animating = false;
+
+            return {
+                setChar: function(newChar) {
+                    if (newChar === current || animating) return;
+                    var old   = current;
+                    current   = newChar;
+                    animating = true;
+
+                    upperSt.textContent = newChar;
+
+                    ufCh.textContent = old;
+                    lfCh.textContent = newChar;
+
+                    ufEl.style.animation = 'none';
+                    lfEl.style.animation = 'none';
+                    lfEl.style.transform = 'perspective(200px) rotateX(90deg)';
+                    ufEl.offsetHeight;
+
+                    ufEl.style.animation = 'ft-flip-upper 0.2s ease-in forwards';
+
+                    setTimeout(function() {
+                        lfEl.style.animation = 'ft-flip-lower 0.2s ease-out forwards';
+
+                        setTimeout(function() {
+                            lowerSt.textContent = newChar;
+                            ufCh.textContent = newChar;
+                            ufEl.style.animation = 'none';
+                            lfEl.style.animation = 'none';
+                            lfEl.style.transform = 'perspective(200px) rotateX(90deg)';
+                            animating = false;
+                        }, 200);
+                    }, 160);
+                }
             };
         }
 
