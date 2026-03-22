@@ -1911,7 +1911,7 @@
             function applySystemTheme() {
                 if (mq.matches) {
                     document.body.classList.remove('light-mode');
-                    vimMode.textContent = 'NORMAL';
+                    vimMode.textContent = 'DARK';
                 } else {
                     document.body.classList.add('light-mode');
                     vimMode.textContent = 'BRIGHT';
@@ -1927,7 +1927,7 @@
             themeBtn.onclick = function() {
                 document.body.classList.toggle('light-mode');
                 var isLight = document.body.classList.contains('light-mode');
-                vimMode.textContent = isLight ? 'BRIGHT' : 'NORMAL';
+                vimMode.textContent = isLight ? 'BRIGHT' : 'DARK';
                 render();
             };
 
