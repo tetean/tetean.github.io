@@ -852,7 +852,7 @@
                                     <span class="msg-reply-date">2025.10.15</span>
                                 </div>
                                 <div class="msg-reply-body">
-                                    Of course. Feel free to send an email directly to academic@tetean.com and we can set up a time to talk. Good luck with the applications.
+                                    Of course. Feel free to send an email directly to <span data-e="npnqrzvp@grgrna.pbz"></span> and we can set up a time to talk. Good luck with the applications.
                                 </div>
                             </div>
                         </div>
@@ -884,7 +884,7 @@
             <span class="label">name:</span><span>Xiean Wang (Sean)</span>
             <span class="label">role:</span><span>M.S. Student</span>
             <span class="label">dept:</span><span>Sun Yat-sen University (SYSU)</span>
-            <span class="label">email:</span><span><a href="mailto:wangxan@mail2.sysu.edu.cn">wangxan@mail2.sysu.edu.cn</a></span>
+            <span class="label">email:</span><span><a data-e="jnatknk@znvy2.flbh.rqh.pa" href="#"></a></span>
             <span class="label">links:</span><span>[<a href="https://github.com/tetean" target="_blank">GitHub</a>] [<a href="https://openreview.net/profile?id=%7EXiean_Wang1" target="_blank">OpenReview</a>]</span>
         </div>
         <div class="screen-box">
@@ -1045,11 +1045,36 @@
 <h2>Contact_Info</h2>
 <ul>
   <li><strong>Office</strong>: Room A510, Computer Science Building, East Campus, Sun Yat-sen University, Guangzhou, China</li>
-  <li><strong>Email</strong>: <a href="mailto:academic@tetean.com">academic@tetean.com</a> and <a href="mailto:wangxan@mail2.sysu.edu.cn">wangxan@mail2.sysu.edu.cn</a></li>
+  <li><strong>Email</strong>: <a data-e="npnqrzvp@grgrna.pbz" href="#"></a> and <a data-e="jnatknk@znvy2.flbh.rqh.pa" href="#"></a></li>
   <li><strong>Status</strong>: Currently expanding into new research directions. If you would like to discuss potential collaboration opportunities, please feel free to contact me.</li>
 </ul>
 </section>
 `;
+
+        // =====================================================================
+        // EMAIL OBFUSCATION
+        // ROT13: each letter is shifted 13 positions in the alphabet.
+        // Encoded values stored in data-e attributes; decoded at runtime only.
+        // =====================================================================
+
+        function rot13(str) {
+            return str.replace(/[a-zA-Z]/g, function(c) {
+                var base = c <= 'Z' ? 65 : 97;
+                return String.fromCharCode((c.charCodeAt(0) - base + 13) % 26 + base);
+            });
+        }
+
+        function decodeEmails() {
+            document.querySelectorAll('[data-e]').forEach(function(el) {
+                var decoded = rot13(el.getAttribute('data-e'));
+                if (el.tagName === 'A') {
+                    el.href = 'mailto:' + decoded;
+                    el.textContent = decoded;
+                } else {
+                    el.textContent = decoded;
+                }
+            });
+        }
 
         // =====================================================================
         // TYPO EFFECT HELPERS
@@ -1781,6 +1806,7 @@
                 });
                 rebuildVimIntro();
                 setupVimObserver();
+                decodeEmails();
             }
 
             function getScrollPercent() {
@@ -1797,7 +1823,28 @@
                 statusRightEl.textContent = 'utf-8 | profile | ' + pct + '%';
             }
 
-            render();
+            // =====================================================================
+            // SYSTEM THEME DETECTION
+            // Reads prefers-color-scheme on load and on system change.
+            // The THEME button overrides this per-session.
+            // =====================================================================
+
+            var mq = window.matchMedia('(prefers-color-scheme: dark)');
+
+            function applySystemTheme() {
+                if (mq.matches) {
+                    document.body.classList.remove('light-mode');
+                    vimMode.textContent = 'NORMAL';
+                } else {
+                    document.body.classList.add('light-mode');
+                    vimMode.textContent = 'BRIGHT';
+                }
+                render();
+            }
+
+            applySystemTheme();
+            mq.addEventListener('change', applySystemTheme);
+
             initFlipBoard();
 
             themeBtn.onclick = function() {
