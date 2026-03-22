@@ -1467,7 +1467,8 @@
         //   4. Lowercase: a b ... z
         //   -> wraps back to -
         // -----------------------------------------------------------------------
-        var FLIP_SEQUENCE = '  -:0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz.,!?@#$%^&*()_+=[]{}|/\\<>~\'"`';
+        // var FLIP_SEQUENCE = '  -:0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz.,!?@#$%^&*()_+=[]{}|/\\<>~\'"`';
+        FLIP_SEQUENCE = '  -:0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz.,!';
         //                   ^^ two spaces: one regular space, kept for readability
 
         // Compute the forward-wrapping sub-sequence from `from` to `to`
