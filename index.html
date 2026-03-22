@@ -1436,7 +1436,10 @@
         var SYSTEM_MESSAGE = 'This is my new website, welcome everyone to visit. Feel free to express any opinions, thank you very much.';
 
         // Duration (ms) for which each system message chunk is held on the board.
-        var BOARD_MESSAGE_CHUNK_DURATION = 3000;
+        // Tiles animate through the full flip sequence to reach the target character;
+        // this value must be large enough for all 22 tiles to finish animating
+        // plus sufficient reading time.
+        var BOARD_MESSAGE_CHUNK_DURATION = 8000;
 
         // Board scheduler state.
         var boardState = {
