@@ -884,7 +884,7 @@
             <span class="label">name:</span><span>Xiean Wang (Sean)</span>
             <span class="label">role:</span><span>M.S. Student</span>
             <span class="label">dept:</span><span>Sun Yat-sen University (SYSU)</span>
-            <span class="label">email:</span><span><a data-e="jnatknk@znvy2.flbh.rqh.pa" href="#"></a></span>
+            <span class="label">email:</span><span><a data-e="jnatkna@znvy2.flbh.rqh.pa" href="#"></a></span>
             <span class="label">links:</span><span>[<a href="https://github.com/tetean" target="_blank">GitHub</a>] [<a href="https://openreview.net/profile?id=%7EXiean_Wang1" target="_blank">OpenReview</a>]</span>
         </div>
         <div class="screen-box">
@@ -1045,7 +1045,7 @@
 <h2>Contact_Info</h2>
 <ul>
   <li><strong>Office</strong>: Room A510, Computer Science Building, East Campus, Sun Yat-sen University, Guangzhou, China</li>
-  <li><strong>Email</strong>: <a data-e="npnqrzvp@grgrna.pbz" href="#"></a> and <a data-e="jnatknk@znvy2.flbh.rqh.pa" href="#"></a></li>
+  <li><strong>Email</strong>: <a data-e="npnqrzvp@grgrna.pbz" href="#"></a> and <a data-e="jnatkna@znvy2.flbh.rqh.pa" href="#"></a></li>
   <li><strong>Status</strong>: Currently expanding into new research directions. If you would like to discuss potential collaboration opportunities, please feel free to contact me.</li>
 </ul>
 </section>
@@ -1053,8 +1053,11 @@
 
         // =====================================================================
         // EMAIL OBFUSCATION
-        // ROT13: each letter is shifted 13 positions in the alphabet.
-        // Encoded values stored in data-e attributes; decoded at runtime only.
+        // Strategy: ROT13-encoded values in data-e attributes are decoded at
+        // runtime and drawn onto <canvas> elements.  No text node ever enters
+        // the DOM; <a> href attributes are never set to mailto:.  Click events
+        // carry the decoded address only as a JS closure in memory.
+        // F12 Elements panel shows only <canvas> pixel data.
         // =====================================================================
 
         function rot13(str) {
@@ -1064,15 +1067,57 @@
             });
         }
 
+        function makeEmailCanvas(decoded, color, fontSizePx) {
+            var dpr = window.devicePixelRatio || 1;
+            var fontStr = fontSizePx + 'px "Fira Code", "JetBrains Mono", "Courier New", monospace';
+            var canvas = document.createElement('canvas');
+            var ctx = canvas.getContext('2d');
+            ctx.font = fontStr;
+            var w = ctx.measureText(decoded).width;
+            var h = fontSizePx * 1.5;
+            canvas.width  = Math.ceil(w * dpr);
+            canvas.height = Math.ceil(h * dpr);
+            canvas.style.width          = Math.ceil(w) + 'px';
+            canvas.style.height         = Math.ceil(h) + 'px';
+            canvas.style.verticalAlign  = 'middle';
+            canvas.style.display        = 'inline-block';
+            ctx.scale(dpr, dpr);
+            ctx.font         = fontStr;
+            ctx.fillStyle    = color;
+            ctx.textBaseline = 'middle';
+            ctx.fillText(decoded, 0, h / 2);
+            return canvas;
+        }
+
         function decodeEmails() {
-            document.querySelectorAll('[data-e]').forEach(function(el) {
-                var decoded = rot13(el.getAttribute('data-e'));
-                if (el.tagName === 'A') {
-                    el.href = 'mailto:' + decoded;
-                    el.textContent = decoded;
-                } else {
-                    el.textContent = decoded;
-                }
+            var rootStyle   = getComputedStyle(document.documentElement);
+            var blueColor   = rootStyle.getPropertyValue('--accent-blue').trim();
+            var mainColor   = rootStyle.getPropertyValue('--text-main').trim();
+
+            // <a data-e="..."> -- email links; href stays "#", click triggers mailto
+            document.querySelectorAll('a[data-e]').forEach(function(el) {
+                var decoded  = rot13(el.getAttribute('data-e'));
+                var fontSize = parseFloat(getComputedStyle(el).fontSize);
+                var canvas   = makeEmailCanvas(decoded, blueColor, fontSize);
+                el.innerHTML = '';
+                el.appendChild(canvas);
+                el.href      = '#';
+                // Remove any prior listener by cloning the node's handler slot
+                el.onclick = (function(addr) {
+                    return function(e) {
+                        e.preventDefault();
+                        window.location.href = 'mailto:' + addr;
+                    };
+                })(decoded);
+            });
+
+            // <span data-e="..."> -- inline plain display (no link)
+            document.querySelectorAll('span[data-e]').forEach(function(el) {
+                var decoded  = rot13(el.getAttribute('data-e'));
+                var fontSize = parseFloat(getComputedStyle(el).fontSize);
+                var canvas   = makeEmailCanvas(decoded, mainColor, fontSize);
+                el.innerHTML = '';
+                el.appendChild(canvas);
             });
         }
 
