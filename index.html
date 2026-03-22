@@ -1429,6 +1429,15 @@
         var BOARD_CHUNK_DURATION = 2500;  // each greeting chunk
         var BOARD_DATE_INTERVAL  = 1000;  // date/time refresh
 
+        // Number of date/time ticks to display before switching to system message.
+        var BOARD_DATE_SHOW_TICKS  = 5;
+        // Duration (ms) for which the system message is held on the board.
+        var BOARD_MESSAGE_DURATION = 4000;
+
+        // System message displayed on the flip board above the date/time cycle.
+        // Set to an empty string to disable; any non-empty string enables it.
+        var SYSTEM_MESSAGE = 'This is my new website, welcome everyone to visit. Feel free to express any opinions, thank you very much.';
+
         // Board scheduler state.
         var boardState = {
             mode:        'date',   // 'date' | 'festival'
@@ -1436,7 +1445,9 @@
             festival:    null,
             chunks:      [],
             chunkIndex:  0,
-            timer:       null
+            timer:       null,
+            subMode:     'date',   // 'date' | 'message'  (active only when SYSTEM_MESSAGE is set)
+            dateTicks:   0         // counts 1-second date ticks before switching to message
         };
 
         // -----------------------------------------------------------------------
@@ -1759,20 +1770,50 @@
             return ' '.repeat(left) + text + ' '.repeat(right);
         }
 
-        // Central scheduler: drives the board through date mode or festival
-        // short-name -> greeting-chunks -> short-name cycles.
+        // Central scheduler: drives the board through date mode, optional system
+        // message mode, or festival short-name -> greeting-chunks -> short-name cycles.
+        //
+        // Subtitle rules:
+        //   date mode  -> show "local time (TZ)"
+        //   message mode  -> no subtitle
+        //   festival mode -> no subtitle
         function scheduleBoardTick() {
             if (boardState.timer) { clearTimeout(boardState.timer); }
 
             var festival = getCurrentFestival();
 
             if (!festival) {
-                // Date/time mode: reset festival tracking, show clock, refresh each second.
                 boardState.mode    = 'date';
                 boardState.festival = null;
+
+                if (!SYSTEM_MESSAGE) {
+                    // Pure date/time display with timezone subtitle.
+                    var tz = getTimezoneAbbr();
+                    setFlipText(padCenter(getDateDisplay(), TILE_COUNT));
+                    setSubtitle(tz ? 'local time (' + tz + ')' : '');
+                    boardState.timer = setTimeout(scheduleBoardTick, BOARD_DATE_INTERVAL);
+                    return;
+                }
+
+                if (boardState.subMode === 'message') {
+                    // Display system message; no subtitle.
+                    setFlipText(padCenter(SYSTEM_MESSAGE, TILE_COUNT));
+                    setSubtitle('');
+                    boardState.subMode   = 'date';
+                    boardState.dateTicks = 0;
+                    boardState.timer = setTimeout(scheduleBoardTick, BOARD_MESSAGE_DURATION);
+                    return;
+                }
+
+                // subMode === 'date': refresh date display with timezone subtitle.
                 var tz = getTimezoneAbbr();
                 setFlipText(padCenter(getDateDisplay(), TILE_COUNT));
                 setSubtitle(tz ? 'local time (' + tz + ')' : '');
+                boardState.dateTicks++;
+                if (boardState.dateTicks >= BOARD_DATE_SHOW_TICKS) {
+                    boardState.subMode   = 'message';
+                    boardState.dateTicks = 0;
+                }
                 boardState.timer = setTimeout(scheduleBoardTick, BOARD_DATE_INTERVAL);
                 return;
             }
@@ -1784,18 +1825,19 @@
                 boardState.phase      = 'short';
                 boardState.chunks     = splitIntoChunks(festival.full, TILE_COUNT);
                 boardState.chunkIndex = 0;
+                boardState.subMode    = 'date';
+                boardState.dateTicks  = 0;
             }
 
             if (boardState.phase === 'short') {
-                // Display the festival short name with the full greeting as subtitle,
-                // then switch to chunk scrolling after BOARD_SHORT_DURATION.
+                // Display the festival short name; no subtitle.
                 setFlipText(padCenter(festival.short, TILE_COUNT));
-                setSubtitle(festival.full);
+                setSubtitle('');
                 boardState.phase      = 'chunk';
                 boardState.chunkIndex = 0;
                 boardState.timer      = setTimeout(scheduleBoardTick, BOARD_SHORT_DURATION);
             } else {
-                // Display the next greeting chunk; hide subtitle during chunk scroll.
+                // Display the next greeting chunk; no subtitle.
                 var chunk = boardState.chunks[boardState.chunkIndex];
                 setFlipText(padCenter(chunk, TILE_COUNT));
                 setSubtitle('');
