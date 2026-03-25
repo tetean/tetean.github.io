@@ -309,22 +309,6 @@
 
         .comment { color: var(--text-muted); font-style: italic; }
 
-        /* --- Screen Dots (reusable) --- */
-        .screen-dots {
-            display: flex;
-            gap: 4px;
-        }
-
-        .screen-dots span {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-        }
-
-        .screen-dots span:nth-child(1) { background: #ff5f57; opacity: 0.75; }
-        .screen-dots span:nth-child(2) { background: #febc2e; opacity: 0.75; }
-        .screen-dots span:nth-child(3) { background: #28c840; opacity: 0.75; }
-
         /* --- Vim Status Line --- */
         .status-line {
             position: fixed; bottom: 0; left: 0; right: 0; height: 25px;
@@ -889,7 +873,6 @@
         </div>
         <div class="screen-box">
             <div class="screen-header">
-                <div class="screen-dots"><span></span><span></span><span></span></div>
                 <span>intro.txt</span>
             </div>
             <div id="vim-intro"></div>
@@ -903,7 +886,7 @@
 
         <div id="content"></div>
 
-        <!-- Anchor: flip board bottom position (date / time mode) -->
+        <!-- Anchor: flip board bottom position (unused; board is hidden in date mode) -->
         <div id="flip-anchor-bottom"></div>
 
         <footer style="margin-top: 40px; opacity: 0.3; font-size: 0.7rem; text-align: center;">
@@ -912,7 +895,7 @@
     </div>
 
     <!-- Split-Flap Board (moved between anchors by JS) -->
-    <div class="flip-board-container" id="flipBoardContainer">
+    <div class="flip-board-container" id="flipBoardContainer" style="display:none;">
         <div class="flip-board" id="flipBoard"></div>
         <div class="flip-subtitle" id="flipSubtitle"></div>
     </div>
@@ -1429,7 +1412,9 @@
 
         var BOARD_SHORT_DURATION = 3000;
         var BOARD_CHUNK_DURATION = 2500;
-        var BOARD_DATE_INTERVAL  = 1000;
+
+        // Interval for re-checking festival status while the board is hidden.
+        var BOARD_IDLE_INTERVAL = 60000;
 
         var SYSTEM_MESSAGE = '';
         var BOARD_MESSAGE_CHUNK_DURATION = 8000;
@@ -1448,6 +1433,12 @@
             // null means the board has not been placed yet.
             position:      null
         };
+
+        function setBoardVisible(visible) {
+            var board = document.getElementById('flipBoardContainer');
+            if (!board) { return; }
+            board.style.display = visible ? 'flex' : 'none';
+        }
 
         // Move the flip board container to the anchor identified by position.
         // position must be 'top' or 'bottom'.
@@ -1732,26 +1723,6 @@
             return null;
         }
 
-        function getTimezoneAbbr() {
-            var parts = Intl.DateTimeFormat([], { timeZoneName: 'short' }).formatToParts(new Date());
-            for (var i = 0; i < parts.length; i++) {
-                if (parts[i].type === 'timeZoneName') { return parts[i].value; }
-            }
-            return '';
-        }
-
-        function getDateDisplay() {
-            var now   = new Date();
-            var days  = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
-            var dname = days[now.getDay()];
-            var y     = now.getFullYear().toString();
-            var mo    = String(now.getMonth() + 1).padStart(2, '0');
-            var d     = String(now.getDate()).padStart(2, '0');
-            var h     = String(now.getHours()).padStart(2, '0');
-            var mi    = String(now.getMinutes()).padStart(2, '0');
-            return dname + ' ' + y + '-' + mo + '-' + d + ' ' + h + ':' + mi;
-        }
-
         function padCenter(text, len) {
             if (text.length >= len) return text.substring(0, len);
             var left  = Math.floor((len - text.length) / 2);
@@ -1769,6 +1740,7 @@
                     boardState.msgChunkIndex = 0;
                     boardState.mode          = 'message';
                 }
+                setBoardVisible(true);
                 moveBoardTo('top');
                 var msgChunk = boardState.msgChunks[boardState.msgChunkIndex];
                 setFlipText(padCenter(msgChunk, TILE_COUNT));
@@ -1788,6 +1760,7 @@
                     boardState.chunks     = splitIntoChunks(festival.full, TILE_COUNT);
                     boardState.chunkIndex = 0;
                 }
+                setBoardVisible(true);
                 moveBoardTo('top');
 
                 if (boardState.phase === 'short') {
@@ -1810,13 +1783,11 @@
                 return;
             }
 
-            boardState.mode     = 'date';
+            // No active festival or system message: hide the board and re-check after one minute.
+            boardState.mode     = 'idle';
             boardState.festival = null;
-            moveBoardTo('bottom');
-            var tz = getTimezoneAbbr();
-            setFlipText(padCenter(getDateDisplay(), TILE_COUNT));
-            setSubtitle(tz ? 'local time (' + tz + ')' : '');
-            boardState.timer = setTimeout(scheduleBoardTick, BOARD_DATE_INTERVAL);
+            setBoardVisible(false);
+            boardState.timer = setTimeout(scheduleBoardTick, BOARD_IDLE_INTERVAL);
         }
 
         function initFlipBoard() {
