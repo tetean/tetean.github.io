@@ -347,7 +347,7 @@
         }
         .cursor-paused {
             animation: none;
-            opacity: 1;
+            opacity: 0;
         }
         @keyframes blink { from, to { opacity: 1; } 50% { opacity: 0; } }
 
@@ -898,24 +898,30 @@
 
     <div class="container">
 
-        <!-- Split-Flap Board -->
-        <div class="flip-board-container">
-            <div class="flip-board" id="flipBoard"></div>
-            <div class="flip-subtitle" id="flipSubtitle"></div>
-        </div>
+        <!-- Anchor: flip board top position (festival / message mode) -->
+        <div id="flip-anchor-top"></div>
 
         <div id="content"></div>
 
-        <footer style="margin-top: 80px; opacity: 0.3; font-size: 0.7rem; text-align: center;">
+        <!-- Anchor: flip board bottom position (date / time mode) -->
+        <div id="flip-anchor-bottom"></div>
+
+        <footer style="margin-top: 40px; opacity: 0.3; font-size: 0.7rem; text-align: center;">
             <p>Copyright 2022-2026 Xiean Wang. All rights reserved.</p>
         </footer>
+    </div>
+
+    <!-- Split-Flap Board (moved between anchors by JS) -->
+    <div class="flip-board-container" id="flipBoardContainer">
+        <div class="flip-board" id="flipBoard"></div>
+        <div class="flip-subtitle" id="flipSubtitle"></div>
     </div>
 
     <div class="status-line">
         <div class="status-left">
             <div class="mode" id="vimMode">NORMAL</div>
             <div class="file-path" id="filePath">~/news.log [+]</div>
-            <span class="cursor"></span>
+            <span class="cursor" id="statusCursor"></span>
         </div>
         <div class="status-right">
             <span id="statusRight">utf-8 | profile | 0%</span>
@@ -1094,7 +1100,6 @@
             var blueColor   = rootStyle.getPropertyValue('--accent-blue').trim();
             var mainColor   = rootStyle.getPropertyValue('--text-main').trim();
 
-            // <a data-e="..."> -- email links; href stays "#", click triggers mailto
             document.querySelectorAll('a[data-e]').forEach(function(el) {
                 var decoded  = rot13(el.getAttribute('data-e'));
                 var fontSize = parseFloat(getComputedStyle(el).fontSize);
@@ -1102,7 +1107,6 @@
                 el.innerHTML = '';
                 el.appendChild(canvas);
                 el.href      = '#';
-                // Remove any prior listener by cloning the node's handler slot
                 el.onclick = (function(addr) {
                     return function(e) {
                         e.preventDefault();
@@ -1111,7 +1115,6 @@
                 })(decoded);
             });
 
-            // <span data-e="..."> -- inline plain display (no link)
             document.querySelectorAll('span[data-e]').forEach(function(el) {
                 var decoded  = rot13(el.getAttribute('data-e'));
                 var fontSize = parseFloat(getComputedStyle(el).fontSize);
@@ -1199,14 +1202,12 @@
             ],
             fullText: '',
             charIdx: 0,
-            // end-of-word typo state
             typoSuffix: '',
-            typoPhase: 'normal',  // 'normal' | 'typo_type' | 'typo_back' | 'midword_back'
+            typoPhase: 'normal',
             typoWord: '',
             typoPos: 0,
             wordCount: 0,
             nextTypoAt: 0,
-            // mid-word typo state
             midTypoAt: 0,
             done: false,
             started: false,
@@ -1267,7 +1268,6 @@
         }
 
         function typeStep() {
-            // --- typo_type phase: type one character of the wrong word ---
             if (vimData.typoPhase === 'typo_type') {
                 if (vimData.typoPos < vimData.typoWord.length) {
                     vimData.typoSuffix += vimData.typoWord[vimData.typoPos];
@@ -1281,7 +1281,6 @@
                 return;
             }
 
-            // --- typo_back phase: erase wrong word character by character ---
             if (vimData.typoPhase === 'typo_back') {
                 if (vimData.typoSuffix.length > 0) {
                     vimData.typoSuffix = vimData.typoSuffix.slice(0, -1);
@@ -1294,7 +1293,6 @@
                 return;
             }
 
-            // --- midword_back phase: erase single wrong character slowly ---
             if (vimData.typoPhase === 'midword_back') {
                 if (vimData.typoSuffix.length > 0) {
                     vimData.typoSuffix = vimData.typoSuffix.slice(0, -1);
@@ -1307,16 +1305,17 @@
                 return;
             }
 
-            // --- normal phase ---
             if (vimData.charIdx >= vimData.fullText.length) {
                 vimData.done = true;
                 rebuildVimIntro();
+                // Typing is complete: restore status bar cursor blinking.
+                var statusCursor = document.getElementById('statusCursor');
+                if (statusCursor) { statusCursor.classList.remove('cursor-paused'); }
                 return;
             }
 
             var ch = vimData.fullText[vimData.charIdx];
 
-            // Skip HTML tags instantly
             if (ch === '<') {
                 while (vimData.charIdx < vimData.fullText.length && vimData.fullText[vimData.charIdx] !== '>') {
                     vimData.charIdx++;
@@ -1326,7 +1325,6 @@
                 return;
             }
 
-            // Mid-word typo: trigger before advancing charIdx so correct char types next
             if (ch !== ' ' && ch !== '\n' && vimData.charIdx >= vimData.midTypoAt) {
                 vimData.midTypoAt = vimData.charIdx + randomInt(20, 45);
                 vimData.typoSuffix = randomWrongChar(ch);
@@ -1339,7 +1337,6 @@
             vimData.charIdx++;
 
             if (ch === ' ') {
-                // End-of-word typo: trigger after a space
                 vimData.wordCount++;
                 if (vimData.wordCount >= vimData.nextTypoAt) {
                     vimData.nextTypoAt = vimData.wordCount + randomInt(5, 10);
@@ -1375,15 +1372,21 @@
             }
             var introEl = document.getElementById('vim-intro');
             if (!introEl) return;
-            var statusCursor = document.querySelector('.cursor');
+            var statusCursor = document.getElementById('statusCursor');
 
             vimData.observer = new IntersectionObserver(function(entries) {
                 var entry = entries[0];
                 if (entry.isIntersecting) {
-                    if (statusCursor) { statusCursor.classList.add('cursor-paused'); }
+                    // Hide status bar cursor only while typing is in progress.
+                    if (!vimData.done && statusCursor) {
+                        statusCursor.classList.add('cursor-paused');
+                    }
                     startVimTyping();
                 } else {
-                    if (statusCursor) { statusCursor.classList.remove('cursor-paused'); }
+                    // Restore status bar cursor only if typing has not yet finished.
+                    if (!vimData.done && statusCursor) {
+                        statusCursor.classList.remove('cursor-paused');
+                    }
                 }
             }, { threshold: 0.1 });
 
@@ -1424,58 +1427,52 @@
         var flipTiles  = [];
         var lastFlipText = '';
 
-        // Duration (ms) for which each board frame is held before advancing.
-        var BOARD_SHORT_DURATION = 3000;  // festival short name
-        var BOARD_CHUNK_DURATION = 2500;  // each greeting chunk
-        var BOARD_DATE_INTERVAL  = 1000;  // date/time refresh
+        var BOARD_SHORT_DURATION = 3000;
+        var BOARD_CHUNK_DURATION = 2500;
+        var BOARD_DATE_INTERVAL  = 1000;
 
-        // System message displayed on the flip board.
-        // Priority: SYSTEM_MESSAGE > festival greeting > date/time.
-        // Set to an empty string to disable; any non-empty string enables it
-        // and suppresses both festival greetings and the date/time display.
         var SYSTEM_MESSAGE = '';
-
-        // Duration (ms) for which each system message chunk is held on the board.
-        // Tiles animate through the full flip sequence to reach the target character;
-        // this value must be large enough for all 22 tiles to finish animating
-        // plus sufficient reading time.
         var BOARD_MESSAGE_CHUNK_DURATION = 8000;
 
-        // Board scheduler state.
         var boardState = {
-            mode:         'date',   // 'date' | 'festival' | 'message'
-            phase:        'short',  // 'short' | 'chunk'
-            festival:     null,
-            chunks:       [],
-            chunkIndex:   0,
-            timer:        null,
-            msgChunks:    [],       // system message split into board-width chunks
+            mode:          'date',
+            phase:         'short',
+            festival:      null,
+            chunks:        [],
+            chunkIndex:    0,
+            timer:         null,
+            msgChunks:     [],
             msgChunkIndex: 0,
-            lastMsg:      ''        // tracks SYSTEM_MESSAGE value to detect changes
+            lastMsg:       '',
+            // Tracks current DOM position: 'top' or 'bottom'.
+            // null means the board has not been placed yet.
+            position:      null
         };
 
-        // -----------------------------------------------------------------------
-        // Unified flip character sequence.
-        //
-        // All tiles share a single ordered cycle.  Flipping always advances
-        // forward (wrapping from the last character back to the first).
-        //
-        // Order:
-        //   1. Symbols  : - : . , ! ? @ # $ % ^ & * ( ) _ + = [ ] { } | / \ < > ~ ' " ` (space)
-        //   2. Digits   : 0 1 2 3 4 5 6 7 8 9
-        //   3. Uppercase: A B ... Z
-        //   4. Lowercase: a b ... z
-        //   -> wraps back to -
-        // -----------------------------------------------------------------------
-        // var FLIP_SEQUENCE = '  -:0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz.,!?@#$%^&*()_+=[]{}|/\\<>~\'"`';
-        FLIP_SEQUENCE = '  -:0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz.,!';
-        //                   ^^ two spaces: one regular space, kept for readability
+        // Move the flip board container to the anchor identified by position.
+        // position must be 'top' or 'bottom'.
+        // The move is skipped when the board is already at the requested position.
+        function moveBoardTo(position) {
+            if (boardState.position === position) { return; }
+            var board = document.getElementById('flipBoardContainer');
+            if (!board) { return; }
+            if (position === 'top') {
+                var anchorTop = document.getElementById('flip-anchor-top');
+                if (anchorTop) {
+                    anchorTop.parentNode.insertBefore(board, anchorTop.nextSibling);
+                    boardState.position = 'top';
+                }
+            } else {
+                var anchorBottom = document.getElementById('flip-anchor-bottom');
+                if (anchorBottom) {
+                    anchorBottom.parentNode.insertBefore(board, anchorBottom);
+                    boardState.position = 'bottom';
+                }
+            }
+        }
 
-        // Compute the forward-wrapping sub-sequence from `from` to `to`
-        // within FLIP_SEQUENCE.  Returns an array of characters to flip
-        // through (inclusive of `to`, exclusive of `from`).
-        // If either character is absent from the sequence, falls back to a
-        // single direct step.
+        FLIP_SEQUENCE = '  -:0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz.,!';
+
         function getFlipSequence(from, to) {
             if (from === to) return [];
             var n  = FLIP_SEQUENCE.length;
@@ -1492,15 +1489,6 @@
             return seq;
         }
 
-        // -----------------------------------------------------------------------
-        // Timing constants (ms).
-        //
-        // SINGLE  - used for the final (or only) flip to the target character.
-        //           Slower to make the landing clearly readable.
-        // SEQ     - used for each intermediate character in a multi-step sequence.
-        //           Fast enough to feel mechanical, slow enough to follow visually.
-        // GAP     - pause between consecutive SEQ flips.
-        // -----------------------------------------------------------------------
         var FLIP_SINGLE_UPPER_DUR   = 60;
         var FLIP_SINGLE_LOWER_DELAY = 52;
         var FLIP_SINGLE_LOWER_DUR   = 60;
@@ -1527,8 +1515,7 @@
             var ufCh    = el.querySelector('.ft-upper-flap .ft-char');
             var lfCh    = el.querySelector('.ft-lower-flap .ft-char');
 
-            // All tiles start at the first character in FLIP_SEQUENCE.
-            var INIT_CHAR = FLIP_SEQUENCE[0];   // '-'
+            var INIT_CHAR = FLIP_SEQUENCE[0];
             var current   = INIT_CHAR;
             var queue     = [];
             var animating = false;
@@ -1599,7 +1586,6 @@
             };
         }
 
-        // Split text into word-boundary chunks of at most maxLen characters.
         function splitIntoChunks(text, maxLen) {
             var words = text.split(' ');
             var chunks = [];
@@ -1619,7 +1605,6 @@
             return chunks;
         }
 
-        // Push a new text string to the flip tiles with staggered tile delay.
         function setFlipText(text) {
             if (text === lastFlipText) return;
             lastFlipText = text;
@@ -1632,7 +1617,6 @@
             }
         }
 
-        // Update the subtitle line below the board.
         function setSubtitle(text) {
             var subEl = document.getElementById('flipSubtitle');
             if (!subEl) return;
@@ -1775,23 +1759,17 @@
             return ' '.repeat(left) + text + ' '.repeat(right);
         }
 
-        // Central scheduler.
-        //
-        // Priority (highest to lowest):
-        //   1. SYSTEM_MESSAGE non-empty  -> display message only, no subtitle, no cycling.
-        //   2. Festival active           -> cycle short name / greeting chunks.
-        //   3. Default                   -> date/time with "local time (TZ)" subtitle.
         function scheduleBoardTick() {
             if (boardState.timer) { clearTimeout(boardState.timer); }
 
-            // Priority 1: system message suppresses everything else.
             if (SYSTEM_MESSAGE) {
                 if (SYSTEM_MESSAGE !== boardState.lastMsg) {
-                    boardState.lastMsg      = SYSTEM_MESSAGE;
-                    boardState.msgChunks    = splitIntoChunks(SYSTEM_MESSAGE, TILE_COUNT);
+                    boardState.lastMsg       = SYSTEM_MESSAGE;
+                    boardState.msgChunks     = splitIntoChunks(SYSTEM_MESSAGE, TILE_COUNT);
                     boardState.msgChunkIndex = 0;
-                    boardState.mode         = 'message';
+                    boardState.mode          = 'message';
                 }
+                moveBoardTo('top');
                 var msgChunk = boardState.msgChunks[boardState.msgChunkIndex];
                 setFlipText(padCenter(msgChunk, TILE_COUNT));
                 setSubtitle('');
@@ -1802,7 +1780,6 @@
 
             var festival = getCurrentFestival();
 
-            // Priority 2: festival greeting suppresses the date/time display.
             if (festival) {
                 if (boardState.festival !== festival) {
                     boardState.festival   = festival;
@@ -1811,6 +1788,7 @@
                     boardState.chunks     = splitIntoChunks(festival.full, TILE_COUNT);
                     boardState.chunkIndex = 0;
                 }
+                moveBoardTo('top');
 
                 if (boardState.phase === 'short') {
                     setFlipText(padCenter(festival.short, TILE_COUNT));
@@ -1832,9 +1810,9 @@
                 return;
             }
 
-            // Priority 3: date/time with timezone subtitle.
             boardState.mode     = 'date';
             boardState.festival = null;
+            moveBoardTo('bottom');
             var tz = getTimezoneAbbr();
             setFlipText(padCenter(getDateDisplay(), TILE_COUNT));
             setSubtitle(tz ? 'local time (' + tz + ')' : '');
@@ -1871,7 +1849,6 @@
             var wrappedLines = wrapText(vimData.lines, charsPerLine);
             vimData.fullText = wrappedLines.map(boldToHtml).join('\n');
 
-            // Set typo thresholds
             vimData.nextTypoAt = randomInt(5, 10);
             vimData.midTypoAt  = randomInt(10, 25);
 
@@ -1899,12 +1876,6 @@
                 var pct = getScrollPercent();
                 statusRightEl.textContent = 'utf-8 | profile | ' + pct + '%';
             }
-
-            // =====================================================================
-            // SYSTEM THEME DETECTION
-            // Reads prefers-color-scheme on load and on system change.
-            // The THEME button overrides this per-session.
-            // =====================================================================
 
             var mq = window.matchMedia('(prefers-color-scheme: dark)');
 
@@ -1935,7 +1906,6 @@
                 navLinksEl.classList.toggle('open');
             };
 
-            // Lazy-load the message iframe on first modal open
             var iframeLoaded = false;
             msgBtn.onclick = function() {
                 if (!iframeLoaded) {
