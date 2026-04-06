@@ -862,7 +862,7 @@
     <!-- Fixed Left Sidebar -->
     <div class="left-panel" id="leftPanel">
         <div class="avatar-box">
-            <img src="https://raw.githubusercontent.com/tetean/image-host/main/notion_pic/202603211816433.jpg" alt="Profile">
+            <img id="profileAvatar" src="" alt="Profile">
         </div>
         <div class="bio-info-list">
             <span class="label">name:</span><span>Xiean Wang (Sean)</span>
@@ -912,6 +912,20 @@
     </div>
 
     <script>
+        // =====================================================================
+        // AVATAR POOL
+        // Add or remove URLs here to manage the candidate avatar list.
+        // One entry is selected at random on every page load.
+        // =====================================================================
+
+        var AVATAR_POOL = [
+            'https://raw.githubusercontent.com/tetean/image-host/main/notion_pic/202603211816433.jpg',
+            'https://raw.githubusercontent.com/tetean/image-host/main/notion_pic/202604061415691.jpg'
+        ];
+
+        document.getElementById('profileAvatar').src =
+            AVATAR_POOL[Math.floor(Math.random() * AVATAR_POOL.length)];
+
         // =====================================================================
         // MARKED SETUP
         // =====================================================================
@@ -1291,7 +1305,6 @@
             if (vimData.charIdx >= vimData.fullText.length) {
                 vimData.done = true;
                 rebuildVimIntro();
-                // Typing is complete: restore status bar cursor blinking.
                 var statusCursor = document.getElementById('statusCursor');
                 if (statusCursor) { statusCursor.classList.remove('cursor-paused'); }
                 return;
@@ -1360,13 +1373,11 @@
             vimData.observer = new IntersectionObserver(function(entries) {
                 var entry = entries[0];
                 if (entry.isIntersecting) {
-                    // Hide status bar cursor only while typing is in progress.
                     if (!vimData.done && statusCursor) {
                         statusCursor.classList.add('cursor-paused');
                     }
                     startVimTyping();
                 } else {
-                    // Restore status bar cursor only if typing has not yet finished.
                     if (!vimData.done && statusCursor) {
                         statusCursor.classList.remove('cursor-paused');
                     }
@@ -1413,7 +1424,6 @@
         var BOARD_SHORT_DURATION = 3000;
         var BOARD_CHUNK_DURATION = 2500;
 
-        // Interval for re-checking festival status while the board is hidden.
         var BOARD_IDLE_INTERVAL = 60000;
 
         var SYSTEM_MESSAGE = '';
@@ -1429,8 +1439,6 @@
             msgChunks:     [],
             msgChunkIndex: 0,
             lastMsg:       '',
-            // Tracks current DOM position: 'top' or 'bottom'.
-            // null means the board has not been placed yet.
             position:      null
         };
 
@@ -1440,9 +1448,6 @@
             board.style.display = visible ? 'flex' : 'none';
         }
 
-        // Move the flip board container to the anchor identified by position.
-        // position must be 'top' or 'bottom'.
-        // The move is skipped when the board is already at the requested position.
         function moveBoardTo(position) {
             if (boardState.position === position) { return; }
             var board = document.getElementById('flipBoardContainer');
@@ -1783,7 +1788,6 @@
                 return;
             }
 
-            // No active festival or system message: hide the board and re-check after one minute.
             boardState.mode     = 'idle';
             boardState.festival = null;
             setBoardVisible(false);
