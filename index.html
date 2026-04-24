@@ -611,8 +611,9 @@
             align-items: center;
         }
 
+        /* FIX: single space after ## */
         .msg-section-title::before {
-            content: "##  ";
+            content: "## ";
             color: var(--text-muted);
         }
 
@@ -914,8 +915,6 @@
     <script>
         // =====================================================================
         // AVATAR POOL
-        // Add or remove URLs here to manage the candidate avatar list.
-        // One entry is selected at random on every page load.
         // =====================================================================
 
         var AVATAR_POOL = [
@@ -1056,11 +1055,6 @@
 
         // =====================================================================
         // EMAIL OBFUSCATION
-        // Strategy: ROT13-encoded values in data-e attributes are decoded at
-        // runtime and drawn onto <canvas> elements.  No text node ever enters
-        // the DOM; <a> href attributes are never set to mailto:.  Click events
-        // carry the decoded address only as a JS closure in memory.
-        // F12 Elements panel shows only <canvas> pixel data.
         // =====================================================================
 
         function rot13(str) {
@@ -1901,24 +1895,53 @@
             });
 
             var navLinks = document.querySelectorAll('.nav-links a');
+            var currentSection = 'news';
+
+            // FIX: click lock prevents scroll events from overriding the
+            // nav active state immediately after a click-triggered smooth scroll.
+            var clickLock = false;
+            var clickLockTimer = null;
+
             navLinks.forEach(function(link) {
-                link.onclick = function() {
+                link.addEventListener('click', function() {
+                    // Set active immediately on click
                     navLinks.forEach(function(l) { l.classList.remove('active'); });
                     this.classList.add('active');
                     navLinksEl.classList.remove('open');
-                };
+
+                    // Record the clicked section and update status bar right away
+                    var sectionId = this.getAttribute('href').replace('#', '');
+                    currentSection = sectionId;
+                    updateStatus(sectionId);
+
+                    // Lock scroll-based updates for long enough to cover smooth scroll
+                    clickLock = true;
+                    if (clickLockTimer) { clearTimeout(clickLockTimer); }
+                    clickLockTimer = setTimeout(function() { clickLock = false; }, 1200);
+                });
             });
 
-            var currentSection = 'news';
-
             window.addEventListener('scroll', function() {
+                // While click lock is active, don't let scroll override the nav
+                if (clickLock) {
+                    // Still update the scroll percentage in the status bar
+                    updateStatus(currentSection);
+                    return;
+                }
+
                 var sections = document.querySelectorAll('section');
                 var found = '';
+
                 sections.forEach(function(section) {
                     if (section.getBoundingClientRect().top <= window.innerHeight * 0.5) {
                         found = section.getAttribute('id');
                     }
                 });
+
+                // If we're at the very top and no section qualifies, default to news
+                if (!found && window.scrollY < 100) {
+                    found = 'news';
+                }
 
                 var atBottom = (window.scrollY + window.innerHeight) >= document.body.scrollHeight - 10;
                 if (atBottom) { found = 'contact'; }
