@@ -1923,6 +1923,22 @@
                     return;
                 }
 
+                var scrollY = window.scrollY;
+
+                // ---- FIX: when scrolled back to the very top, always select news ----
+                if (scrollY < 100) {
+                    currentSection = 'news';
+                    navLinks.forEach(function(link) {
+                        link.classList.remove('active');
+                        if (link.getAttribute('href') === '#news') {
+                            link.classList.add('active');
+                        }
+                    });
+                    updateStatus('news');
+                    return;
+                }
+                // ---------------------------------------------------------------------
+
                 var sections = document.querySelectorAll('section');
                 var found = '';
 
@@ -1932,13 +1948,11 @@
                     }
                 });
 
-                // FIX: if no section qualifies (e.g. scrolled back to top),
-                // default to 'news' instead of relying on a fragile scrollY threshold.
                 if (!found) {
                     found = 'news';
                 }
 
-                var atBottom = (window.scrollY + window.innerHeight) >= document.body.scrollHeight - 10;
+                var atBottom = (scrollY + window.innerHeight) >= document.body.scrollHeight - 10;
                 if (atBottom) { found = 'contact'; }
 
                 if (found) { currentSection = found; }
