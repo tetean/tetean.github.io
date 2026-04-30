@@ -501,13 +501,17 @@
             100% { transform: perspective(200px) rotateX(0deg); }
         }
 
+        /* FIX: fixed height so the subtitle never causes a layout shift.
+           Space is always reserved; opacity-only transition shows/hides the text. */
         .flip-subtitle {
             font-family: var(--font-mono);
             font-size: 0.72rem;
+            line-height: 1.4;
             color: var(--text-muted);
             text-align: center;
             transition: opacity 0.6s;
-            min-height: 1.2em;
+            height: 2.8em;
+            overflow: hidden;
             letter-spacing: 0.02em;
         }
 
@@ -566,12 +570,13 @@
             height: 12px;
             border-radius: 50%;
             display: inline-block;
-            cursor: pointer;
         }
 
-        .modal-traffic .btn-close  { background: #ff5f57; }
-        .modal-traffic .btn-min    { background: #febc2e; }
-        .modal-traffic .btn-max    { background: #28c840; }
+        .modal-traffic .btn-close { background: #ff5f57; cursor: pointer; }
+
+        /* FIX: yellow and green dots are decorative only -- not interactive */
+        .modal-traffic .btn-min  { background: #febc2e; pointer-events: none; cursor: default; }
+        .modal-traffic .btn-max  { background: #28c840; pointer-events: none; cursor: default; }
 
         .modal-title {
             flex: 1;
@@ -866,10 +871,18 @@
         <div class="avatar-box">
             <img id="profileAvatar" src="" alt="Profile">
         </div>
+        <!--
+            FIX: name, role, dept values are ROT-13 encoded in data-t attributes.
+            decodeTexts() renders them to canvas at runtime to resist crawlers.
+            ROT-13 mappings:
+              "Xiean Wang (Sean)"              -> "Kvrna Jnat (Frna)"
+              "MPhil Student"                  -> "ZCuvy Fghqrag"
+              "Sun Yat-sen University (SYSU)"  -> "Fha Lng-fra Havirefvgl (FLPH)"
+        -->
         <div class="bio-info-list">
-            <span class="label">name:</span><span>Xiean Wang (Sean)</span>
-            <span class="label">role:</span><span>MPhil Student</span>
-            <span class="label">dept:</span><span>Sun Yat-sen University (SYSU)</span>
+            <span class="label">name:</span><span data-t="Kvrna Jnat (Frna)"></span>
+            <span class="label">role:</span><span data-t="ZCuvy Fghqrag"></span>
+            <span class="label">dept:</span><span data-t="Fha Lng-fra Havirefvgl (FLPH)"></span>
             <span class="label">email:</span><span><a data-e="jnatkna@znvy2.flfh.rqh.pa" href="#"></a></span>
             <span class="label">links:</span><span>[<a href="https://github.com/tetean" target="_blank">GitHub</a>] [<a href="https://openreview.net/profile?id=%7EXiean_Wang1" target="_blank">OpenReview</a>]</span>
         </div>
@@ -1109,6 +1122,25 @@
 
             document.querySelectorAll('span[data-e]').forEach(function(el) {
                 var decoded  = rot13(el.getAttribute('data-e'));
+                var fontSize = parseFloat(getComputedStyle(el).fontSize);
+                var canvas   = makeEmailCanvas(decoded, mainColor, fontSize);
+                el.innerHTML = '';
+                el.appendChild(canvas);
+            });
+        }
+
+        // =====================================================================
+        // BIO TEXT OBFUSCATION
+        // FIX: name, role, dept values are stored ROT-13 encoded in data-t
+        // attributes and rendered to canvas at runtime using --text-main color.
+        // =====================================================================
+
+        function decodeTexts() {
+            var rootStyle = getComputedStyle(document.documentElement);
+            var mainColor = rootStyle.getPropertyValue('--text-main').trim();
+
+            document.querySelectorAll('span[data-t]').forEach(function(el) {
+                var decoded  = rot13(el.getAttribute('data-t'));
                 var fontSize = parseFloat(getComputedStyle(el).fontSize);
                 var canvas   = makeEmailCanvas(decoded, mainColor, fontSize);
                 el.innerHTML = '';
@@ -1416,8 +1448,9 @@
         var flipTiles  = [];
         var lastFlipText = '';
 
-        var BOARD_SHORT_DURATION = 3000;
-        var BOARD_CHUNK_DURATION = 2500;
+        // FIX: increased durations so each display is readable before cycling.
+        var BOARD_SHORT_DURATION = 5000;
+        var BOARD_CHUNK_DURATION = 4000;
 
         var BOARD_IDLE_INTERVAL = 60000;
 
@@ -1612,6 +1645,8 @@
             var subEl = document.getElementById('flipSubtitle');
             if (!subEl) return;
             subEl.textContent = text;
+            // FIX: height is fixed in CSS; only opacity changes so the layout
+            // below the board is never displaced by the subtitle appearing.
             subEl.style.opacity = text ? '1' : '0';
         }
 
@@ -1831,6 +1866,9 @@
                 rebuildVimIntro();
                 setupVimObserver();
                 decodeEmails();
+                // FIX: re-render bio text canvases on every theme change so
+                // color matches the current --text-main value.
+                decodeTexts();
             }
 
             function getScrollPercent() {
