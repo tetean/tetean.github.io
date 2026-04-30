@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog -- Xiean Wang</title>
+    <link rel="icon" type="image/x-icon" href="https://raw.githubusercontent.com/tetean/image-host/main/notion_pic/favicon.ico">
+    <style>
+        /* =====================================================================
+           CSS Variables & Themes  (mirrors homepage)
+           ===================================================================== */
+        :root {
+            --bg-dark:        #1a1b26;
+            --bg-status:      #24283b;
+            --text-main:      #a9b1d6;
+            --text-muted:     #565f89;
+            --accent-green:   #9ece6a;
+            --accent-blue:    #7aa2f7;
+            --accent-orange:  #ff9e64;
+            --accent-magenta: #bb9af7;
+            --cursor-bg:      #c0caf5;
+            --nav-bg:         #16161e;
+            --font-mono:      "Fira Code", "JetBrains Mono", "Courier New", monospace;
+            --font-prose:     "Times New Roman", "SimSun", "Songti SC", serif;
+        }
+
+        body.light-mode {
+            --bg-dark:        #eef1f5;
+            --bg-status:      #d1d5db;
+            --text-main:      #2e3440;
+            --text-muted:     #6b7280;
+            --accent-green:   #448c27;
+            --accent-blue:    #005a9e;
+            --accent-orange:  #d75f00;
+            --accent-magenta: #a626a4;
+            --cursor-bg:      #333333;
+            --nav-bg:         #ffffff;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: var(--font-mono);
+            font-size: 14px;
+            line-height: 1.7;
+            padding-top: 50px;
+            padding-bottom: 40px;
+        }
+
+        /* =====================================================================
+           Nav Bar
+           ===================================================================== */
+        nav {
+            position: fixed; top: 0; left: 0; right: 0;
+            background: var(--nav-bg);
+            display: flex;
+            border-bottom: 1px solid var(--bg-status);
+            z-index: 1000;
+        }
+
+        .nav-home {
+            display: inline-block;
+            padding: 10px 20px;
+            color: var(--text-muted);
+            text-decoration: none;
+            border-right: 1px solid var(--bg-status);
+            font-size: 0.8rem;
+            transition: background 0.2s;
+        }
+        .nav-home:hover { background: var(--bg-status); color: var(--text-main); }
+
+        .nav-title {
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            font-size: 0.8rem;
+            color: var(--accent-orange);
+            border-top: 2px solid var(--accent-orange);
+            background: var(--bg-dark);
+            flex: 1;
+        }
+
+        /* =====================================================================
+           Fixed Buttons
+           ===================================================================== */
+        .fixed-btn-group {
+            position: fixed;
+            bottom: 40px;
+            right: 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 2000;
+        }
+
+        .fixed-btn {
+            width: 44px;
+            height: 44px;
+            background: var(--bg-status);
+            border: 1px solid var(--text-muted);
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0.6;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            text-align: center;
+            line-height: 1.2;
+            transition: all 0.3s;
+        }
+
+        .fixed-btn:hover {
+            opacity: 1;
+            border-color: var(--accent-orange);
+            color: var(--accent-orange);
+            transform: translateY(-2px);
+        }
+
+        /* =====================================================================
+           Page Container
+           ===================================================================== */
+        .container {
+            max-width: 820px;
+            margin: 0 auto;
+            padding: 48px 40px 60px;
+        }
+
+        /* =====================================================================
+           Page Header
+           ===================================================================== */
+        .page-header {
+            margin-bottom: 56px;
+        }
+
+        .page-header h1 {
+            font-family: var(--font-mono);
+            font-size: 1.8rem;
+            font-weight: normal;
+            color: var(--accent-blue);
+            margin-bottom: 10px;
+        }
+
+        .page-header h1 .punct {
+            color: var(--accent-orange);
+        }
+
+        .page-header .tagline {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            border-left: 2px solid var(--bg-status);
+            padding-left: 12px;
+            line-height: 1.6;
+            font-style: italic;
+            font-family: var(--font-prose);
+        }
+
+        /* =====================================================================
+           Blog Entry
+           ===================================================================== */
+        .blog-entry {
+            margin-bottom: 64px;
+            padding-bottom: 48px;
+            border-bottom: 1px solid var(--bg-status);
+        }
+
+        .blog-entry:last-child {
+            border-bottom: none;
+        }
+
+        /* Entry Header */
+        .entry-header {
+            display: flex;
+            align-items: baseline;
+            gap: 16px;
+            margin-bottom: 22px;
+            flex-wrap: wrap;
+        }
+
+        .entry-date {
+            font-family: var(--font-mono);
+            font-size: 0.78rem;
+            color: var(--accent-green);
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .entry-date::before {
+            content: "// ";
+            color: var(--text-muted);
+        }
+
+        .entry-title {
+            font-family: var(--font-mono);
+            font-size: 1.05rem;
+            font-weight: normal;
+            color: var(--accent-magenta);
+        }
+
+        .entry-tags {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-top: 6px;
+        }
+
+        .entry-tag {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            border: 1px solid var(--bg-status);
+            padding: 1px 7px;
+            font-family: var(--font-mono);
+        }
+
+        .entry-tag::before { content: "#"; color: var(--accent-orange); }
+
+        /* =====================================================================
+           Prose Text Block
+           ===================================================================== */
+        .entry-prose {
+            font-family: var(--font-prose);
+            font-size: 0.975rem;
+            line-height: 1.9;
+            color: var(--text-main);
+            margin-bottom: 24px;
+        }
+
+        .entry-prose p {
+            margin-bottom: 1em;
+        }
+
+        .entry-prose a {
+            color: var(--accent-blue);
+            text-decoration: none;
+        }
+
+        .entry-prose a:hover {
+            text-decoration: underline;
+            color: var(--accent-magenta);
+        }
+
+        .entry-prose strong {
+            color: var(--accent-orange);
+            font-weight: bold;
+        }
+
+        /* Aside / Quote block */
+        .entry-aside {
+            font-family: var(--font-prose);
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            border-left: 3px solid var(--accent-magenta);
+            padding: 10px 16px;
+            margin: 20px 0;
+            background: var(--bg-status);
+            font-style: italic;
+            line-height: 1.75;
+        }
+
+        /* =====================================================================
+           Image Gallery
+           ===================================================================== */
+        .entry-gallery {
+            display: grid;
+            gap: 6px;
+            margin-bottom: 24px;
+        }
+
+        /* Layout variants: add class to .entry-gallery */
+        .gallery-1  { grid-template-columns: 1fr; }
+        .gallery-2  { grid-template-columns: 1fr 1fr; }
+        .gallery-3  { grid-template-columns: 1fr 1fr 1fr; }
+        .gallery-4  { grid-template-columns: 1fr 1fr; }
+
+        /* For mixed layouts (e.g., 1 big + 2 small), use gallery-1-2 and
+           set the first child to span 2 columns manually if needed. */
+        .gallery-feature { grid-template-columns: 2fr 1fr; }
+
+        .gallery-img-wrap {
+            overflow: hidden;
+            background: var(--bg-status);
+            border: 1px solid var(--bg-status);
+            aspect-ratio: 4 / 3;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .gallery-img-wrap.tall {
+            aspect-ratio: 3 / 4;
+        }
+
+        .gallery-img-wrap.wide {
+            aspect-ratio: 16 / 9;
+        }
+
+        .gallery-img-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.4s ease;
+            cursor: zoom-in;
+        }
+
+        .gallery-img-wrap img:hover {
+            transform: scale(1.03);
+        }
+
+        /* Caption under a gallery */
+        .gallery-caption {
+            font-family: var(--font-mono);
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            text-align: center;
+            margin-top: 4px;
+        }
+
+        /* =====================================================================
+           Video Embed (YouTube / Bilibili)
+           ===================================================================== */
+        .entry-video {
+            margin-bottom: 24px;
+        }
+
+        .video-wrap {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%; /* 16:9 */
+            background: var(--bg-status);
+            border: 1px solid var(--text-muted);
+            overflow: hidden;
+        }
+
+        .video-wrap iframe {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .video-caption {
+            font-family: var(--font-mono);
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            margin-top: 6px;
+        }
+
+        /* =====================================================================
+           Lightbox
+           ===================================================================== */
+        #lightbox {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 5000;
+            background: rgba(0, 0, 0, 0.88);
+            backdrop-filter: blur(8px);
+            align-items: center;
+            justify-content: center;
+        }
+
+        #lightbox.open {
+            display: flex;
+        }
+
+        #lightbox img {
+            max-width: 90vw;
+            max-height: 88vh;
+            object-fit: contain;
+            display: block;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.7);
+        }
+
+        #lightbox-close {
+            position: fixed;
+            top: 20px;
+            right: 28px;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+            font-size: 1.4rem;
+            cursor: pointer;
+            z-index: 5001;
+        }
+
+        #lightbox-close:hover {
+            color: var(--accent-orange);
+        }
+
+        /* =====================================================================
+           Status Line
+           ===================================================================== */
+        .status-line {
+            position: fixed; bottom: 0; left: 0; right: 0; height: 25px;
+            background: var(--bg-status);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.75rem;
+            z-index: 1001;
+        }
+
+        .status-left { display: flex; align-items: center; }
+        .mode        { background: var(--accent-blue); color: #fff; padding: 0 10px; font-weight: bold; margin-right: 10px; }
+        .status-right { padding: 0 15px; color: var(--text-muted); }
+
+        .cursor {
+            display: inline-block;
+            width: 8px;
+            height: 1.2em;
+            background: var(--cursor-bg);
+            vertical-align: middle;
+            animation: blink 1s step-end infinite;
+            margin-left: 4px;
+        }
+
+        @keyframes blink { from, to { opacity: 1; } 50% { opacity: 0; } }
+
+        /* =====================================================================
+           Punct highlight
+           ===================================================================== */
+        .punct { color: var(--accent-orange); font-weight: bold; }
+
+        /* =====================================================================
+           Responsive
+           ===================================================================== */
+        @media (max-width: 640px) {
+            .container { padding: 32px 18px 60px; }
+            .gallery-2, .gallery-3, .gallery-feature { grid-template-columns: 1fr; }
+            .gallery-4 { grid-template-columns: 1fr 1fr; }
+            .fixed-btn-group { bottom: 60px; right: 18px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Nav -->
+    <nav>
+        <a class="nav-home" href="index.html">&larr; index</a>
+        <span class="nav-title">blog.log</span>
+    </nav>
+
+    <!-- Fixed Buttons -->
+    <div class="fixed-btn-group">
+        <div class="fixed-btn" id="themeBtn">THEME</div>
+    </div>
+
+    <!-- Lightbox -->
+    <div id="lightbox">
+        <span id="lightbox-close">[x]</span>
+        <img id="lightbox-img" src="" alt="">
+    </div>
+
+    <!-- Main -->
+    <div class="container">
+
+        <div class="page-header">
+            <h1><span class="punct">//</span> Blog</h1>
+            <div class="tagline">
+                Photographs retain only the scenery; those who are happy to record everything in life<br>
+                never know that the happiness can never be retained. So, please cherish the beauty around you.
+            </div>
+        </div>
+
+        <!-- ==================================================================
+             ENTRY: Text + Photos
+             ================================================================== -->
+        <article class="blog-entry">
+            <div class="entry-header">
+                <span class="entry-date">October 1, 2025</span>
+                <h2 class="entry-title">Finding a Slower Pace of Life</h2>
+            </div>
+            <div class="entry-tags">
+                <span class="entry-tag">photography</span>
+                <span class="entry-tag">life</span>
+                <span class="entry-tag">zhuhai</span>
+            </div>
+
+            <!-- Prose -->
+            <div class="entry-prose" style="margin-top:18px;">
+                <p>
+                    Sun &amp; Moon Bay during the day resembles a white sail, and at night,
+                    it transforms into a lighthouse. Life in Zhuhai should slow down.
+                </p>
+            </div>
+
+            <!-- 5-photo layout: first row 2-col, second row 3-col -->
+            <div class="entry-gallery gallery-2">
+                <div class="gallery-img-wrap">
+                    <img src="https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/202510051629391.JPG"
+                         alt="Sun Moon Bay 1"
+                         loading="lazy">
+                </div>
+                <div class="gallery-img-wrap">
+                    <img src="https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/202510051630556.JPG"
+                         alt="Sun Moon Bay 2"
+                         loading="lazy">
+                </div>
+            </div>
+            <div class="entry-gallery gallery-3">
+                <div class="gallery-img-wrap">
+                    <img src="https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/202510051631396.JPG"
+                         alt="Sun Moon Bay 3"
+                         loading="lazy">
+                </div>
+                <div class="gallery-img-wrap">
+                    <img src="https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/202510051630713.JPG"
+                         alt="Sun Moon Bay 4"
+                         loading="lazy">
+                </div>
+                <div class="gallery-img-wrap">
+                    <img src="https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/202510051631899.JPG"
+                         alt="Sun Moon Bay 5"
+                         loading="lazy">
+                </div>
+            </div>
+            <div class="gallery-caption">Sun &amp; Moon Bay, Zhuhai -- Oct. 2025</div>
+        </article>
+
+        <!-- ==================================================================
+             ENTRY: Text + Photos (longer prose)
+             ================================================================== -->
+        <article class="blog-entry">
+            <div class="entry-header">
+                <span class="entry-date">August 8, 2025</span>
+                <h2 class="entry-title">A Brief Rest after Being Busy</h2>
+            </div>
+            <div class="entry-tags">
+                <span class="entry-tag">photography</span>
+                <span class="entry-tag">research</span>
+                <span class="entry-tag">shenzhen</span>
+            </div>
+
+            <div class="entry-prose" style="margin-top:18px;">
+                <p>
+                    Back in August, I wrapped up my very first CCF-A paper. Honestly, it was not easy
+                    at all -- much tougher than the earlier things I have worked on. And to be fair,
+                    I am not even sure if it will get accepted. In computer science, the first author
+                    usually takes on about 80% of the workload, which feels very different from what
+                    I have heard happens in other fields. For me, this whole process was a mix of
+                    struggle and learning, and I know I still have a long way to go.
+                </p>
+            </div>
+
+            <div class="entry-gallery gallery-2">
+                <div class="gallery-img-wrap">
+                    <img src="https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/202509192157625.JPG"
+                         alt="Rest 1" loading="lazy">
+                </div>
+                <div class="gallery-img-wrap">
+                    <img src="https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/202509192200884.JPG"
+                         alt="Rest 2" loading="lazy">
+                </div>
+            </div>
+
+            <div class="entry-prose">
+                <p>
+                    I still keep this little dream in mind -- that maybe one day I will go for a PhD.
+                    For now, I just see this paper as a small step forward. Finishing a project does
+                    not mean everything is done; it is more like letting it go and getting ready for
+                    what is next. I tell myself not to get stuck, but to keep moving, even if it is
+                    just one step at a time.
+                </p>
+                <p>
+                    Of course, life is not only about work. Sometimes you just need to pause, take a
+                    breath, and recharge a little. That is why I took a short trip to Shenzhen -- it
+                    is not far from where I study. And guess what? It was actually my first time
+                    seeing the sea. Standing there with the breeze in my face, listening to the
+                    waves... it felt so refreshing and meaningful in its own quiet way. Moments like
+                    that remind me that growth does not only come from research -- it also comes from
+                    living, experiencing, and enjoying life a bit along the way.
+                </p>
+            </div>
+
+            <div class="entry-gallery gallery-2">
+                <div class="gallery-img-wrap">
+                    <img src="https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/202509192200805.JPG"
+                         alt="Rest 3" loading="lazy">
+                </div>
+                <div class="gallery-img-wrap">
+                    <img src="https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/202509192200246.JPG"
+                         alt="Rest 4" loading="lazy">
+                </div>
+            </div>
+        </article>
+
+        <!-- ==================================================================
+             ENTRY: Text + Aside Quote (no photos)
+             ================================================================== -->
+        <article class="blog-entry">
+            <div class="entry-header">
+                <span class="entry-date">February 8, 2025</span>
+                <h2 class="entry-title">My Oral English Learning Trip, Was Really Interesting</h2>
+            </div>
+            <div class="entry-tags">
+                <span class="entry-tag">language</span>
+                <span class="entry-tag">life</span>
+            </div>
+
+            <div class="entry-aside" style="margin-top:18px;">
+                You decide the depth and direction of your interactions with these people. If it does
+                not feel right, or if the other person's habits or behaviors make you uncomfortable,
+                you can leave without any explanation. There is no loss in this. On the contrary,
+                you can learn more skills in the process of communicating with others with proper
+                relaxation and tension. In the future, when you meet new people, those who are
+                worthy of your cherishing and those you can give your all to, you will not miss them.
+            </div>
+
+            <!-- Placeholder prose -->
+            <div class="entry-prose">
+                <p>
+                    [Add your entry text here.]
+                </p>
+            </div>
+        </article>
+
+        <!-- ==================================================================
+             ENTRY: Video embed (YouTube) + Text
+             ================================================================== -->
+        <article class="blog-entry">
+            <div class="entry-header">
+                <span class="entry-date">February 10, 2024</span>
+                <h2 class="entry-title">2023 Retrospect</h2>
+            </div>
+            <div class="entry-tags">
+                <span class="entry-tag">video</span>
+                <span class="entry-tag">retrospect</span>
+            </div>
+
+            <div class="entry-prose" style="margin-top:18px;">
+                <p>
+                    I summarized my moments over the past year through a short video.
+                </p>
+            </div>
+
+            <!-- YouTube embed -- replace VIDEO_ID with the actual id -->
+            <div class="entry-video">
+                <div class="video-wrap">
+                    <iframe
+                        src="https://www.youtube.com/embed/VIDEO_ID"
+                        title="2023 Retrospect"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowfullscreen>
+                    </iframe>
+                </div>
+                <div class="video-caption">2023 Retrospect -- short video summary</div>
+            </div>
+        </article>
+
+        <!-- ==================================================================
+             ENTRY: Bilibili video embed + Text
+             ================================================================== -->
+        <article class="blog-entry">
+            <div class="entry-header">
+                <span class="entry-date">September 17, 2024</span>
+                <h2 class="entry-title">Mid-autumn Festival Lanterns</h2>
+            </div>
+            <div class="entry-tags">
+                <span class="entry-tag">video</span>
+                <span class="entry-tag">festival</span>
+            </div>
+
+            <div class="entry-aside" style="margin-top:18px;">
+                The only downside was that it was so crowded with people.
+            </div>
+
+            <!-- Bilibili embed -- replace BV_ID with the actual BV number, e.g. BV1xx411c7XE -->
+            <div class="entry-video">
+                <div class="video-wrap">
+                    <iframe
+                        src="https://player.bilibili.com/player.html?bvid=BV_ID&page=1&autoplay=0"
+                        title="Mid-autumn Festival Lanterns"
+                        scrolling="no"
+                        allowfullscreen>
+                    </iframe>
+                </div>
+                <div class="video-caption">Mid-autumn Festival Lanterns -- recorded on site</div>
+            </div>
+        </article>
+
+        <!-- ==================================================================
+             ENTRY: Single full-width photo + prose
+             ================================================================== -->
+        <article class="blog-entry">
+            <div class="entry-header">
+                <span class="entry-date">November 12, 2024</span>
+                <h2 class="entry-title">Celebrate the 100th Anniversary of SYSU</h2>
+            </div>
+            <div class="entry-tags">
+                <span class="entry-tag">photography</span>
+                <span class="entry-tag">campus</span>
+            </div>
+
+            <div class="entry-aside" style="margin-top:18px;">
+                I am really lucky to witness the 100th anniversary of the founding of Sun Yat-sen
+                University. I had just started my first year of school and was so unfamiliar with
+                everything, yet so excited about it.
+            </div>
+
+            <div class="entry-gallery gallery-4">
+                <div class="gallery-img-wrap">
+                    <img src="https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/IMG_6760.JPG"
+                         alt="SYSU 100th 1" loading="lazy">
+                </div>
+                <div class="gallery-img-wrap">
+                    <img src="https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/IMG_6756.JPG"
+                         alt="SYSU 100th 2" loading="lazy">
+                </div>
+                <div class="gallery-img-wrap">
+                    <img src="https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/IMG_6807.JPG"
+                         alt="SYSU 100th 3" loading="lazy">
+                </div>
+                <div class="gallery-img-wrap">
+                    <img src="https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/IMG_6759.JPG"
+                         alt="SYSU 100th 4" loading="lazy">
+                </div>
+            </div>
+            <div class="gallery-caption">Sun Yat-sen University -- 100th Anniversary Celebration</div>
+        </article>
+
+        <!-- ==================================================================
+             ENTRY: Single photo
+             ================================================================== -->
+        <article class="blog-entry">
+            <div class="entry-header">
+                <span class="entry-date">January 23, 2024</span>
+                <h2 class="entry-title">My First IELTS Experience</h2>
+            </div>
+            <div class="entry-tags">
+                <span class="entry-tag">language</span>
+                <span class="entry-tag">milestone</span>
+            </div>
+
+            <div class="entry-prose" style="margin-top:18px;">
+                <p>
+                    Upon my admission to graduate school, I made a conscious decision to enhance my
+                    English proficiency. Commencing my endeavor in late September, I diligently
+                    prepared for the IELTS examination, culminating in my test-taking experience in
+                    December.
+                </p>
+                <p>
+                    Reflecting on the journey of language acquisition, I realized the significance
+                    of my prior academic exposure since the third grade. However, it was during the
+                    intensive two-month preparation for the IELTS exam that I truly grasped the
+                    depth of knowledge and skills necessary for proficiency.
+                </p>
+                <p>
+                    Engaging with English has become an integral part of my daily routine,
+                    transcending the confines of exam preparation to enrich my life with diverse
+                    perspectives and experiences. It is through this continual engagement that I
+                    envision attaining not only linguistic mastery but also a deeper connection with
+                    the global community.
+                </p>
+            </div>
+
+            <div class="entry-gallery gallery-1">
+                <div class="gallery-img-wrap wide">
+                    <img src="https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/IMG_3809.JPG"
+                         alt="IELTS" loading="lazy">
+                </div>
+            </div>
+        </article>
+
+        <!-- ==================================================================
+             ENTRY: Text only (no media)
+             ================================================================== -->
+        <article class="blog-entry">
+            <div class="entry-header">
+                <span class="entry-date">November 14, 2021</span>
+                <h2 class="entry-title">Winter in the North</h2>
+            </div>
+            <div class="entry-tags">
+                <span class="entry-tag">life</span>
+                <span class="entry-tag">reflection</span>
+            </div>
+
+            <div class="entry-aside" style="margin-top:18px;">
+                The snow came late this year. There is a special feeling for winter in the north.
+                Looking at the pedestrians on the road, everyone walks forward, clothes thick, each
+                step is not too hurried, and each step must be stepped on. The fast-paced life seems
+                to be slowing down. It is said that with age, people are more and more unconscious
+                of the passage of time, and whenever it dawns on them, they realize that time is not
+                on their side. The third winter in the Northeast is still a novelty.
+            </div>
+
+            <div class="entry-gallery gallery-1">
+                <div class="gallery-img-wrap wide">
+                    <img src="https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/IMG_4414(20240331-152358).JPG"
+                         alt="Winter in the North" loading="lazy">
+                </div>
+            </div>
+        </article>
+
+        <footer style="margin-top:40px; opacity:0.3; font-size:0.7rem; text-align:center; font-family:var(--font-mono);">
+            <p>Copyright 2022-2026 Xiean Wang. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <!-- Vim Status Line -->
+    <div class="status-line">
+        <div class="status-left">
+            <div class="mode" id="vimMode">NORMAL</div>
+            <div style="color:var(--text-main);">~/blog.log [+]</div>
+            <span class="cursor"></span>
+        </div>
+        <div class="status-right" id="statusRight">utf-8 | blog | 0%</div>
+    </div>
+
+    <script>
+        // =====================================================================
+        // THEME TOGGLE
+        // =====================================================================
+        var themeBtn = document.getElementById('themeBtn');
+        var vimMode  = document.getElementById('vimMode');
+
+        var mq = window.matchMedia('(prefers-color-scheme: dark)');
+
+        function applySystemTheme() {
+            if (mq.matches) {
+                document.body.classList.remove('light-mode');
+                vimMode.textContent = 'DARK';
+            } else {
+                document.body.classList.add('light-mode');
+                vimMode.textContent = 'BRIGHT';
+            }
+        }
+
+        applySystemTheme();
+        mq.addEventListener('change', applySystemTheme);
+
+        themeBtn.onclick = function() {
+            document.body.classList.toggle('light-mode');
+            vimMode.textContent = document.body.classList.contains('light-mode') ? 'BRIGHT' : 'DARK';
+        };
+
+        // =====================================================================
+        // SCROLL PERCENT
+        // =====================================================================
+        var statusRight = document.getElementById('statusRight');
+
+        window.addEventListener('scroll', function() {
+            var scrollTop = window.scrollY;
+            var docHeight = document.body.scrollHeight - window.innerHeight;
+            var pct = docHeight <= 0 ? 0 : Math.round((scrollTop / docHeight) * 100);
+            statusRight.textContent = 'utf-8 | blog | ' + pct + '%';
+        });
+
+        // =====================================================================
+        // LIGHTBOX
+        // =====================================================================
+        var lightbox      = document.getElementById('lightbox');
+        var lightboxImg   = document.getElementById('lightbox-img');
+        var lightboxClose = document.getElementById('lightbox-close');
+
+        document.querySelectorAll('.gallery-img-wrap img').forEach(function(img) {
+            img.addEventListener('click', function() {
+                lightboxImg.src = this.src;
+                lightbox.classList.add('open');
+            });
+        });
+
+        function closeLightbox() {
+            lightbox.classList.remove('open');
+            lightboxImg.src = '';
+        }
+
+        lightboxClose.addEventListener('click', closeLightbox);
+        lightbox.addEventListener('click', function(e) {
+            if (e.target === lightbox) { closeLightbox(); }
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') { closeLightbox(); }
+        });
+    </script>
+</body>
+</html>
