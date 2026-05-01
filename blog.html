@@ -61,8 +61,10 @@
             position: fixed; top: 0; left: 0; right: 0;
             background: var(--nav-bg);
             display: flex;
+            align-items: stretch;
             border-bottom: 1px solid var(--bg-status);
             z-index: 1000;
+            height: 50px;
         }
 
         .nav-title {
@@ -74,6 +76,92 @@
             border-top: 2px solid var(--accent-orange);
             background: var(--bg-dark);
             flex: 1;
+        }
+
+        .nav-manu-btn {
+            background: none;
+            border: none;
+            border-left: 1px solid var(--bg-status);
+            font-family: var(--font-mono);
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 0 20px;
+            letter-spacing: 0.03em;
+            white-space: nowrap;
+            transition: color 0.2s, background-color 0.2s;
+        }
+
+        .nav-manu-btn:hover,
+        .nav-manu-btn.open {
+            color: var(--accent-orange);
+            background: var(--bg-status);
+        }
+
+        /* =====================================================================
+           MANU Dropdown
+           ===================================================================== */
+        .manu-dropdown {
+            position: fixed;
+            top: 50px;
+            left: 0;
+            right: 0;
+            z-index: 999;
+            background: var(--nav-bg);
+            border-bottom: 1px solid var(--bg-status);
+            max-height: 60vh;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .manu-dropdown.open {
+            display: block;
+            animation: manu-slide-down 0.2s ease;
+        }
+
+        @keyframes manu-slide-down {
+            from { opacity: 0; transform: translateY(-6px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .manu-list {
+            padding: 10px 0;
+        }
+
+        .manu-item {
+            display: flex;
+            align-items: baseline;
+            gap: 16px;
+            padding: 8px 40px;
+            cursor: pointer;
+            transition: background-color 0.15s;
+        }
+
+        .manu-item:hover {
+            background: var(--bg-status);
+        }
+
+        .manu-item-date {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--accent-green);
+            flex-shrink: 0;
+            white-space: nowrap;
+        }
+
+        .manu-item-date::before {
+            content: "// ";
+            color: var(--text-muted);
+        }
+
+        .manu-item-title {
+            font-family: var(--font-mono);
+            font-size: 0.78rem;
+            color: var(--accent-magenta);
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         /* =====================================================================
@@ -159,6 +247,7 @@
             margin-bottom: 64px;
             padding-bottom: 48px;
             border-bottom: 1px solid var(--bg-status);
+            scroll-margin-top: 62px;
         }
 
         .blog-entry:last-child {
@@ -345,6 +434,18 @@
             transform: scale(1.03);
         }
 
+        .gallery-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+            font-size: 0.72rem;
+            letter-spacing: 0.05em;
+        }
+
         .gallery-caption {
             font-family: var(--font-mono);
             font-size: 0.72rem;
@@ -376,6 +477,17 @@
             width: 100%;
             height: 100%;
             border: none;
+        }
+
+        .video-placeholder-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+            font-size: 0.72rem;
+            letter-spacing: 0.05em;
         }
 
         .video-caption {
@@ -535,9 +647,9 @@
             margin-bottom: 2px;
         }
 
-        .cmt-reply-indicator { color: var(--text-muted);    font-size: 0.78rem; font-family: var(--font-mono); }
+        .cmt-reply-indicator { color: var(--text-muted);     font-size: 0.78rem; font-family: var(--font-mono); }
         .cmt-reply-author    { color: var(--accent-magenta); font-size: 0.82rem; font-family: var(--font-mono); }
-        .cmt-reply-date      { color: var(--text-muted);    font-size: 0.75rem; font-family: var(--font-mono); }
+        .cmt-reply-date      { color: var(--text-muted);     font-size: 0.75rem; font-family: var(--font-mono); }
 
         .cmt-reply-body {
             color: var(--text-main);
@@ -635,6 +747,9 @@
             .fixed-btn-group { bottom: 60px; right: 18px; }
             .entry-header { flex-wrap: wrap; }
             .entry-header-actions { margin-left: 0; margin-top: 4px; }
+            .manu-item { padding: 8px 18px; gap: 10px; }
+            .manu-item-date { font-size: 0.7rem; }
+            .manu-item-title { font-size: 0.72rem; }
         }
     </style>
 </head>
@@ -642,7 +757,12 @@
 
     <nav>
         <span class="nav-title">blog.log</span>
+        <button class="nav-manu-btn" id="manuBtn">[MANU]</button>
     </nav>
+
+    <div class="manu-dropdown" id="manuDropdown">
+        <div class="manu-list" id="manuList"></div>
+    </div>
 
     <div class="fixed-btn-group">
         <div class="fixed-btn" id="themeBtn">THEME</div>
@@ -706,7 +826,8 @@
         // =====================================================================
         // CONFIG
         // =====================================================================
-        var COUNTER_NAMESPACE  = 'tetean-blog';
+        var COUNTER_BASE_URL   = 'https://countapi.mileshilliard.com/api/v1';
+        var COUNTER_KEY_PREFIX = 'tetean-xiean-blog-';
         var COMMENT_IFRAME_URL = 'https://www.wjx.top/vm/Ygd42AJ.aspx#';
         var LIKED_POSTS_KEY    = 'tetean-blog-liked';
 
@@ -733,10 +854,11 @@
         //   { type: 'gallery', cols: 2, images: [...], caption: '...' }
         //     Image grid. cols: 1, 2, 3, or 4.
         //     Each image: { src: 'https://...', alt: '...', ratio: 'wide'|'tall'|'' }
+        //     Use { placeholder: true, alt: '...' } for unavailable images.
         //     caption is optional.
         //
         //   { type: 'video', platform: 'youtube'|'bilibili', id: 'VIDEO_ID', caption: '...' }
-        //     Embedded video. Replace id with the YouTube video ID or Bilibili BV number.
+        //     Embedded video. Set placeholder: true when the video ID is unknown.
         //
         // selectedComments format:
         //   { date: '2025.10.01', author: 'Name', body: '...', replies: [
@@ -826,39 +948,25 @@
                 selectedComments: []
             },
             {
-                id: 'retrospect-2023',
-                date: 'February 10, 2024',
-                title: '2023 Retrospect',
-                tags: ['video', 'retrospect'],
+                id: 'academia',
+                date: 'January 17, 2025',
+                title: 'A Little Superficial Knowledge of Academia',
+                tags: ['research', 'reflection', 'life'],
                 blocks: [
                     {
                         type: 'prose',
-                        text: 'I summarized my moments over the past year through a short video.'
+                        text: 'Recently, a teacher (see [his website](https://lilinnihaomath.github.io/)) came to visit our supervisor. I served as a "be-all-end-all assistant" for two days, accompanying the teacher to meals and helping hail taxis for him. Although this teacher does not have an extensive resume, after two days of getting along, some of my views have changed. For instance, I used to prefer to immerse myself in doing things alone and did not really like this kind of socializing. I like teachers who are straightforward and considerate of their students. This teacher really has it tough. Many things he has achieved are through his own efforts, and he has taught me a lot of methods. One should get to know more people and learn to communicate.'
                     },
                     {
-                        type: 'video',
-                        platform: 'youtube',
-                        id: 'VIDEO_ID',
-                        caption: '2023 Retrospect -- short video summary'
-                    }
-                ],
-                selectedComments: []
-            },
-            {
-                id: 'lanterns',
-                date: 'September 17, 2024',
-                title: 'Mid-autumn Festival Lanterns',
-                tags: ['video', 'festival'],
-                blocks: [
-                    {
-                        type: 'aside',
-                        text: 'The only downside was that it was so crowded with people.'
+                        type: 'gallery',
+                        cols: 1,
+                        images: [
+                            { src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/20250208232549661.JPG', alt: 'Academia visit', ratio: 'wide' }
+                        ]
                     },
                     {
-                        type: 'video',
-                        platform: 'bilibili',
-                        id: 'BV_ID',
-                        caption: 'Mid-autumn Festival Lanterns -- recorded on site'
+                        type: 'prose',
+                        text: 'Our supervisor enjoys a high reputation outside, but he is rather strict with us. Due to his advanced age and limited energy, he cannot provide substantial guidance. Looking at it from another perspective, he actually has his merits. He is good at making friends, has leadership skills, and can build a team. In fact, academia is often a self-glorifying and self-indulging circle. Once you step out of this circle, people may not recognize each other. No matter how excellent your paper is, it may at most evoke indifference. **I am tired but happy. One should strive for what one wants.**'
                     }
                 ],
                 selectedComments: []
@@ -888,6 +996,76 @@
                 selectedComments: []
             },
             {
+                id: 'lanterns',
+                date: 'September 17, 2024',
+                title: 'Mid-autumn Festival Lanterns',
+                tags: ['video', 'festival'],
+                blocks: [
+                    {
+                        type: 'aside',
+                        text: 'The only downside was that it was so crowded with people.'
+                    },
+                    {
+                        type: 'video',
+                        platform: 'bilibili',
+                        id: 'BV1N5bweVEC7',
+                        caption: 'Mid-autumn Festival Lanterns -- recorded on site'
+                    }
+                ],
+                selectedComments: []
+            },
+            {
+                id: 'zoo',
+                date: 'June 29, 2024',
+                title: 'Cute Animals in Guangzhou Zoo',
+                tags: ['video', 'life'],
+                blocks: [
+                    {
+                        type: 'aside',
+                        text: 'First time seeing a panda, a shallow video record.'
+                    },
+                    {
+                        type: 'video',
+                        platform: 'bilibili',
+                        id: 'BV1UE421N7hv',
+                        caption: 'Cute Animals in Guangzhou Zoo -- recorded on site'
+                    }
+                ],
+                selectedComments: []
+            },
+            {
+                id: 'contentment',
+                date: 'April 3, 2024',
+                title: 'Contentment Is Happiness',
+                tags: ['reflection', 'life'],
+                blocks: [
+                    {
+                        type: 'aside',
+                        text: "Life's essence lies in simplicity -- marriage, work, aging -- a journey punctuated by fleeting moments of serendipity."
+                    }
+                ],
+                selectedComments: []
+            },
+            {
+                id: 'retrospect-2023',
+                date: 'February 10, 2024',
+                title: '2023 Retrospect',
+                tags: ['video', 'retrospect'],
+                blocks: [
+                    {
+                        type: 'prose',
+                        text: 'I summarized my moments over the past year through a short video.'
+                    },
+                    {
+                        type: 'video',
+                        platform: 'bilibili',
+                        id: 'BV1LH4y1h71m',
+                        caption: '2023 Retrospect -- short video summary'
+                    }
+                ],
+                selectedComments: []
+            },
+            {
                 id: 'ielts',
                 date: 'January 23, 2024',
                 title: 'My First IELTS Experience',
@@ -908,6 +1086,27 @@
                 selectedComments: []
             },
             {
+                id: 'changbai',
+                date: 'October 8, 2023',
+                title: 'Tour the Changbai',
+                tags: ['video', 'travel'],
+                blocks: [
+                    {
+                        type: 'aside',
+                        text: 'At the end of National Day, after being admitted to graduate school, I went to Changbai Mountain. Life is all about enjoying!'
+                    },
+                    {
+                        // TODO: set placeholder: false and fill in id when the Bilibili BV ID is available
+                        type: 'video',
+                        platform: 'bilibili',
+                        id: '',
+                        caption: 'Tour the Changbai -- National Day 2023',
+                        placeholder: true
+                    }
+                ],
+                selectedComments: []
+            },
+            {
                 id: 'winter-north',
                 date: 'November 14, 2021',
                 title: 'Winter in the North',
@@ -923,6 +1122,48 @@
                         images: [
                             { src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/IMG_4414(20240331-152358).JPG', alt: 'Winter in the North', ratio: 'wide' }
                         ]
+                    }
+                ],
+                selectedComments: []
+            },
+            {
+                id: 'chongqing',
+                date: 'July 2021',
+                title: 'Chongqing Summer Vibe',
+                tags: ['photography', 'travel'],
+                blocks: [
+                    {
+                        // TODO: replace placeholder images with actual src URLs when available
+                        type: 'gallery',
+                        cols: 2,
+                        images: [
+                            { placeholder: true, alt: 'Chongqing 1' },
+                            { placeholder: true, alt: 'Chongqing 2' },
+                            { placeholder: true, alt: 'Chongqing 3' },
+                            { placeholder: true, alt: 'Chongqing 4' }
+                        ],
+                        caption: 'Chongqing -- Summer 2021'
+                    }
+                ],
+                selectedComments: []
+            },
+            {
+                id: 'beijing',
+                date: 'July 2017',
+                title: 'Beijing Tour Silhouette',
+                tags: ['photography', 'travel'],
+                blocks: [
+                    {
+                        // TODO: replace placeholder images with actual src URLs when available
+                        type: 'gallery',
+                        cols: 2,
+                        images: [
+                            { placeholder: true, alt: 'Beijing 1' },
+                            { placeholder: true, alt: 'Beijing 2' },
+                            { placeholder: true, alt: 'Beijing 3' },
+                            { placeholder: true, alt: 'Beijing 4' }
+                        ],
+                        caption: 'Beijing -- Summer 2017'
                     }
                 ],
                 selectedComments: []
@@ -947,8 +1188,6 @@
             return text;
         }
 
-        // Converts a title string to a filename-safe slug with underscores.
-        // e.g. "Finding a Slower Pace of Life" -> "Finding_a_Slower_Pace_of_Life"
         function titleToSlug(title) {
             return title.replace(/\s+/g, '_').replace(/[^A-Za-z0-9_\-]/g, '');
         }
@@ -984,9 +1223,13 @@
                                        : img.ratio === 'tall' ? ' tall'
                                        : '';
                         html += '<div class="gallery-img-wrap' + ratioClass + '">';
-                        html += '<img src="' + escapeHtml(img.src) + '"'
-                              + ' alt="' + escapeHtml(img.alt || '') + '"'
-                              + ' loading="lazy">';
+                        if (img.placeholder) {
+                            html += '<div class="gallery-placeholder">[image unavailable]</div>';
+                        } else {
+                            html += '<img src="' + escapeHtml(img.src) + '"'
+                                  + ' alt="' + escapeHtml(img.alt || '') + '"'
+                                  + ' loading="lazy">';
+                        }
                         html += '</div>';
                     });
                     html += '</div>';
@@ -999,23 +1242,26 @@
                 }
 
                 case 'video': {
-                    var src = '';
-                    if (block.platform === 'youtube') {
-                        src = 'https://www.youtube.com/embed/' + escapeHtml(block.id);
-                    } else if (block.platform === 'bilibili') {
-                        src = 'https://player.bilibili.com/player.html?bvid='
-                            + escapeHtml(block.id) + '&page=1&autoplay=0';
+                    var html = '<div class="entry-video"><div class="video-wrap">';
+                    if (block.placeholder) {
+                        html += '<span class="video-placeholder-text">[video unavailable]</span>';
+                    } else {
+                        var src = '';
+                        if (block.platform === 'youtube') {
+                            src = 'https://www.youtube.com/embed/' + escapeHtml(block.id);
+                        } else if (block.platform === 'bilibili') {
+                            src = 'https://player.bilibili.com/player.html?bvid='
+                                + escapeHtml(block.id) + '&page=1&autoplay=0';
+                        }
+                        var extraAttrs = block.platform === 'bilibili'
+                            ? 'scrolling="no"'
+                            : 'allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"';
+                        html += '<iframe src="' + src + '"'
+                              + ' title="' + escapeHtml(block.caption || '') + '"'
+                              + ' ' + extraAttrs
+                              + ' allowfullscreen></iframe>';
                     }
-                    var extraAttrs = block.platform === 'bilibili'
-                        ? 'scrolling="no"'
-                        : 'allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"';
-                    var html = '<div class="entry-video">'
-                             + '<div class="video-wrap">'
-                             + '<iframe src="' + src + '"'
-                             + ' title="' + escapeHtml(block.caption || '') + '"'
-                             + ' ' + extraAttrs
-                             + ' allowfullscreen></iframe>'
-                             + '</div>';
+                    html += '</div>';
                     if (block.caption) {
                         html += '<div class="video-caption">' + escapeHtml(block.caption) + '</div>';
                     }
@@ -1049,7 +1295,6 @@
             var likeLabel  = liked ? '[LIKED]' : '[LIKE]';
             var likedClass = liked ? ' liked'  : '';
 
-            // Both LIKE and CMT live in the title row, right-aligned.
             var headerActionsHtml =
                 '<div class="entry-header-actions">'
               + '<button class="action-btn' + likedClass + '"'
@@ -1061,7 +1306,10 @@
               + ' onclick="openCommentModal(\'' + post.id + '\')">[CMT]</button>'
               + '</div>';
 
-            return '<article class="blog-entry" data-post-id="' + post.id + '" data-post-title="' + escapeHtml(post.title) + '">'
+            return '<article class="blog-entry"'
+                 + ' id="post-' + post.id + '"'
+                 + ' data-post-id="' + post.id + '"'
+                 + ' data-post-title="' + escapeHtml(post.title) + '">'
                  + '<div class="entry-header">'
                  + '<span class="entry-date">' + escapeHtml(post.date) + '</span>'
                  + '<h2 class="entry-title">' + escapeHtml(post.title) + '</h2>'
@@ -1084,9 +1332,10 @@
 
         // =====================================================================
         // LIKES
-        // Uses countapi.xyz.
-        // GET  /get/{namespace}/{key}  -- read current count, returns { value: N }
-        // GET  /hit/{namespace}/{key}  -- increment and return new count
+        // API: countapi.mileshilliard.com
+        //   GET /api/v1/get/{key}   -> { value: "N" }  (404 if key not yet set)
+        //   GET /api/v1/hit/{key}   -> { value: "N" }  (creates key on first hit)
+        // Keys: tetean-xiean-blog-{post-id}
         // =====================================================================
         function getLikedPosts() {
             try {
@@ -1110,14 +1359,18 @@
 
         function loadAllLikeCounts() {
             BLOG_POSTS.forEach(function(post) {
-                var url = 'https://api.countapi.xyz/get/'
-                        + COUNTER_NAMESPACE + '/' + post.id;
+                var key = COUNTER_KEY_PREFIX + post.id;
+                var url = COUNTER_BASE_URL + '/get/' + key;
                 fetch(url)
-                    .then(function(r) { return r.json(); })
+                    .then(function(r) {
+                        if (!r.ok) return { value: '0' };
+                        return r.json();
+                    })
                     .then(function(data) {
                         var el = document.getElementById('like-count-' + post.id);
-                        if (el && typeof data.value !== 'undefined' && data.value !== null) {
-                            el.textContent = data.value;
+                        if (el) {
+                            el.textContent = (data.value !== undefined && data.value !== null)
+                                           ? data.value : '0';
                         }
                     })
                     .catch(function() {
@@ -1136,13 +1389,13 @@
                 btn.style.pointerEvents = 'none';
             }
 
-            var url = 'https://api.countapi.xyz/hit/'
-                    + COUNTER_NAMESPACE + '/' + postId;
+            var key = COUNTER_KEY_PREFIX + postId;
+            var url = COUNTER_BASE_URL + '/hit/' + key;
             fetch(url)
                 .then(function(r) { return r.json(); })
                 .then(function(data) {
                     markPostLiked(postId);
-                    var newCount = (typeof data.value !== 'undefined' && data.value !== null)
+                    var newCount = (data.value !== undefined && data.value !== null)
                                  ? data.value : '--';
                     if (btn) {
                         btn.style.opacity = '';
@@ -1223,6 +1476,53 @@
         }
 
         // =====================================================================
+        // MANU (Table of Contents)
+        // =====================================================================
+        function closeManu() {
+            document.getElementById('manuDropdown').classList.remove('open');
+            document.getElementById('manuBtn').classList.remove('open');
+        }
+
+        function scrollToPost(postId) {
+            closeManu();
+            var el = document.getElementById('post-' + postId);
+            if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
+        function initManu() {
+            var btn      = document.getElementById('manuBtn');
+            var dropdown = document.getElementById('manuDropdown');
+            var list     = document.getElementById('manuList');
+
+            var html = '';
+            BLOG_POSTS.forEach(function(post) {
+                html += '<div class="manu-item" onclick="scrollToPost(\'' + post.id + '\')">'
+                      + '<span class="manu-item-date">' + escapeHtml(post.date) + '</span>'
+                      + '<span class="manu-item-title">' + escapeHtml(post.title) + '</span>'
+                      + '</div>';
+            });
+            list.innerHTML = html;
+
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (dropdown.classList.contains('open')) {
+                    closeManu();
+                } else {
+                    dropdown.classList.add('open');
+                    btn.classList.add('open');
+                }
+            });
+
+            document.addEventListener('click', function(e) {
+                if (!btn.contains(e.target) && !dropdown.contains(e.target)) {
+                    closeManu();
+                }
+            });
+        }
+
+        // =====================================================================
         // LIGHTBOX (event delegation -- works on dynamically rendered images)
         // =====================================================================
         function initLightbox() {
@@ -1251,6 +1551,7 @@
                 if (e.key !== 'Escape') return;
                 closeLightbox();
                 closeCommentModal();
+                closeManu();
             });
         }
 
@@ -1284,19 +1585,16 @@
 
         // =====================================================================
         // STATUS BAR -- scroll percent + current article detection
-        // Tracks whichever article's top edge is closest to viewport center.
         // =====================================================================
         function initStatusBar() {
             var statusRight = document.getElementById('statusRight');
             var statusPath  = document.getElementById('statusPath');
 
             function updateStatus() {
-                // Scroll percent
                 var docHeight = document.body.scrollHeight - window.innerHeight;
                 var pct = docHeight <= 0 ? 0 : Math.round((window.scrollY / docHeight) * 100);
                 statusRight.textContent = 'utf-8 | blog | ' + pct + '%';
 
-                // Current article: find the entry whose top is closest to viewport center
                 var viewportCenter = window.scrollY + window.innerHeight / 2;
                 var articles = document.querySelectorAll('.blog-entry');
                 var closest = null;
@@ -1314,7 +1612,7 @@
                 if (closest) {
                     var title = closest.getAttribute('data-post-title') || '';
                     var slug  = titleToSlug(title);
-                    statusPath.textContent = '~/blog/' + slug + '.log [+]';
+                    statusPath.textContent = '~/' + slug + '.log [+]';
                 } else {
                     statusPath.textContent = '~/blog.log [+]';
                 }
@@ -1359,6 +1657,7 @@
             initLightbox();
             initIframeAutoHeight();
             loadAllLikeCounts();
+            initManu();
 
             document.getElementById('cmtModalClose').addEventListener('click', closeCommentModal);
             document.getElementById('cmtModal').addEventListener('click', function(e) {
