@@ -50,7 +50,7 @@
             font-family: var(--font-mono);
             font-size: 14px;
             line-height: 1.7;
-            padding-top: 50px;
+            padding-top: 36px;
             padding-bottom: 40px;
         }
 
@@ -64,24 +64,13 @@
             align-items: stretch;
             border-bottom: 1px solid var(--bg-status);
             z-index: 1000;
-            height: 50px;
-        }
-
-        .nav-title {
-            display: flex;
-            align-items: center;
-            padding: 0 20px;
-            font-size: 0.8rem;
-            color: var(--accent-orange);
-            border-top: 2px solid var(--accent-orange);
-            background: var(--bg-dark);
-            flex: 1;
+            height: 36px;
         }
 
         .nav-manu-btn {
             background: none;
             border: none;
-            border-left: 1px solid var(--bg-status);
+            border-right: 1px solid var(--bg-status);
             font-family: var(--font-mono);
             font-size: 0.78rem;
             color: var(--text-muted);
@@ -103,7 +92,7 @@
            ===================================================================== */
         .manu-dropdown {
             position: fixed;
-            top: 50px;
+            top: 36px;
             left: 0;
             right: 0;
             z-index: 999;
@@ -247,7 +236,7 @@
             margin-bottom: 64px;
             padding-bottom: 48px;
             border-bottom: 1px solid var(--bg-status);
-            scroll-margin-top: 62px;
+            scroll-margin-top: 48px;
         }
 
         .blog-entry:last-child {
@@ -284,7 +273,6 @@
             min-width: 0;
         }
 
-        /* Clickable title (entry has a gallery) */
         .entry-title-clickable {
             cursor: pointer;
             transition: color 0.2s;
@@ -307,7 +295,7 @@
         }
 
         /* =====================================================================
-           Entry Header Actions (LIKE + CMT inline in title row)
+           Entry Header Actions
            ===================================================================== */
         .entry-header-actions {
             margin-left: auto;
@@ -520,6 +508,26 @@
         }
 
         /* =====================================================================
+           Rights Badge
+           ===================================================================== */
+        .rights-badge {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .rights-badge-free       { color: var(--accent-green); }
+        .rights-badge-restricted { color: var(--accent-orange); }
+        .rights-badge-repost     { color: var(--text-muted); }
+
+        .rights-label {
+            font-family: var(--font-mono);
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            margin-left: 4px;
+        }
+
+        /* =====================================================================
            Comment Modal
            ===================================================================== */
         .cmt-modal-overlay {
@@ -625,7 +633,7 @@
         }
 
         .cmt-section-title::before {
-            content: "## ";
+            content: "// ";
             color: var(--text-muted);
             white-space: pre;
         }
@@ -822,9 +830,9 @@
             letter-spacing: 0.04em;
         }
 
-        /* Right: detail pane */
+        /* Right: detail pane -- 50% width */
         .gal-detail-pane {
-            width: 300px;
+            width: 50%;
             flex-shrink: 0;
             border-left: 1px solid var(--bg-status);
             display: flex;
@@ -836,26 +844,29 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 8px 12px;
+            padding: 10px 16px;
             border-bottom: 1px solid var(--bg-status);
             background: var(--bg-status);
             flex-shrink: 0;
+            height: 64px;
         }
 
         .gal-nav-btn {
             background: none;
-            border: none;
+            border: 1px solid var(--bg-status);
             font-family: var(--font-mono);
-            font-size: 0.72rem;
+            font-size: 1rem;
             color: var(--text-muted);
             cursor: pointer;
-            padding: 4px 8px;
-            transition: color 0.2s, opacity 0.2s;
+            padding: 10px 24px;
+            width: 42%;
             letter-spacing: 0.03em;
+            transition: color 0.2s, opacity 0.2s, border-color 0.2s;
         }
 
         .gal-nav-btn:hover {
             color: var(--accent-orange);
+            border-color: var(--accent-orange);
         }
 
         .gal-nav-btn:disabled {
@@ -865,11 +876,12 @@
 
         .gal-nav-btn:disabled:hover {
             color: var(--text-muted);
+            border-color: var(--bg-status);
         }
 
         .gal-nav-count {
             font-family: var(--font-mono);
-            font-size: 0.72rem;
+            font-size: 0.8rem;
             color: var(--text-muted);
         }
 
@@ -961,16 +973,6 @@
             padding-left: 10px;
         }
 
-        .gal-detail-copyright {
-            font-family: var(--font-mono);
-            font-size: 0.65rem;
-            color: var(--text-muted);
-            margin-top: 14px;
-            padding-top: 12px;
-            border-top: 1px solid var(--bg-status);
-            line-height: 1.6;
-        }
-
         .gal-detail-empty {
             flex: 1;
             display: flex;
@@ -998,12 +1000,29 @@
 
         #lightbox.open { display: flex; }
 
-        #lightbox img {
+        #lightbox-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
             max-width: 90vw;
-            max-height: 88vh;
+            max-height: 92vh;
+        }
+
+        #lightbox img {
+            max-width: 100%;
+            max-height: 82vh;
             object-fit: contain;
             display: block;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+        }
+
+        #lightbox-caption {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-align: center;
+            min-height: 1.2em;
         }
 
         #lightbox-close {
@@ -1061,6 +1080,7 @@
             .manu-item { padding: 8px 18px; gap: 10px; }
             .manu-item-date { font-size: 0.7rem; }
             .manu-item-title { font-size: 0.72rem; }
+            .nav-manu-btn { padding: 0 14px; }
 
             /* Gallery modal stacks on mobile */
             .gal-modal-body { flex-direction: column; }
@@ -1072,13 +1092,16 @@
             }
             .gal-grid-pane { max-height: 40vh; }
             .gal-masonry { columns: 2; }
+
+            /* PREV/NEXT on mobile */
+            .gal-nav { height: 48px; }
+            .gal-nav-btn { font-size: 0.82rem; padding: 6px 12px; width: 44%; }
         }
     </style>
 </head>
 <body>
 
     <nav>
-        <span class="nav-title">blog.log</span>
         <button class="nav-manu-btn" id="manuBtn">[MANU]</button>
     </nav>
 
@@ -1145,7 +1168,10 @@
     <!-- Lightbox -->
     <div id="lightbox">
         <span id="lightbox-close">[x]</span>
-        <img id="lightbox-img" src="" alt="">
+        <div id="lightbox-content">
+            <img id="lightbox-img" src="" alt="">
+            <div id="lightbox-caption"></div>
+        </div>
     </div>
 
     <div class="container">
@@ -1183,42 +1209,6 @@
         var LIKED_POSTS_KEY    = 'tetean-blog-liked';
 
         // =====================================================================
-        // GALLERY ITEM SCHEMA
-        //
-        // Each post can have an optional `gallery` array. To add photos or
-        // videos, append objects to that array -- no HTML knowledge required.
-        //
-        // Photo item:
-        //   {
-        //     type     : 'photo',
-        //     title    : 'Display title',
-        //     date     : 'Month DD, YYYY',   // leave '' if unknown
-        //     location : 'City, Venue',       // leave '' if unknown
-        //     caption  : 'What to say.',      // leave '' if none
-        //     src      : 'https://direct-image-url',
-        //     copyright: 'original-free'      // see options below
-        //   }
-        //
-        // Video item:
-        //   {
-        //     type     : 'video',
-        //     title    : 'Display title',
-        //     date     : 'Month DD, YYYY',
-        //     location : 'City, Venue',
-        //     caption  : 'What to say.',
-        //     platform : 'bilibili',           // or 'youtube'
-        //     id       : 'BV1xxxxxxxxx',       // video ID string
-        //     cover    : 'https://cover-url',  // thumbnail; leave '' for placeholder
-        //     copyright: 'original-free'
-        //   }
-        //
-        // Copyright presets (system generates the full sentence automatically):
-        //   'original-free'       -- original work, welcome to reproduce
-        //   'original-restricted' -- original work, no reproduction allowed
-        //   'repost'              -- not original
-        // =====================================================================
-
-        // =====================================================================
         // BLOG DATA
         // =====================================================================
         var BLOG_POSTS = [
@@ -1236,17 +1226,17 @@
                         type: 'gallery',
                         cols: 2,
                         images: [
-                            { src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/202510051629391.JPG', alt: 'Sun Moon Bay 1' },
-                            { src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/202510051630556.JPG', alt: 'Sun Moon Bay 2' }
+                            { src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/202510051629391.JPG', alt: 'Sun Moon Bay 1', copyright: 'original-restricted' },
+                            { src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/202510051630556.JPG', alt: 'Sun Moon Bay 2', copyright: 'original-restricted' }
                         ]
                     },
                     {
                         type: 'gallery',
                         cols: 3,
                         images: [
-                            { src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/202510051631396.JPG', alt: 'Sun Moon Bay 3' },
-                            { src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/202510051630713.JPG', alt: 'Sun Moon Bay 4' },
-                            { src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/202510051631899.JPG', alt: 'Sun Moon Bay 5' }
+                            { src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/202510051631396.JPG', alt: 'Sun Moon Bay 3', copyright: 'original-restricted' },
+                            { src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/202510051630713.JPG', alt: 'Sun Moon Bay 4', copyright: 'original-restricted' },
+                            { src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/202510051631899.JPG', alt: 'Sun Moon Bay 5', copyright: 'original-restricted' }
                         ],
                         caption: 'Sun & Moon Bay, Zhuhai -- Oct. 2025'
                     }
@@ -1267,8 +1257,8 @@
                         type: 'gallery',
                         cols: 2,
                         images: [
-                            { src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/202509192157625.JPG', alt: 'Rest 1' },
-                            { src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/202509192200884.JPG', alt: 'Rest 2' }
+                            { src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/202509192157625.JPG', alt: 'Rest 1', copyright: 'original-restricted' },
+                            { src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/202509192200884.JPG', alt: 'Rest 2', copyright: 'original-restricted' }
                         ]
                     },
                     {
@@ -1279,8 +1269,8 @@
                         type: 'gallery',
                         cols: 2,
                         images: [
-                            { src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/202509192200805.JPG', alt: 'Rest 3' },
-                            { src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/202509192200246.JPG', alt: 'Rest 4' }
+                            { src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/202509192200805.JPG', alt: 'Rest 3', copyright: 'original-restricted' },
+                            { src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/202509192200246.JPG', alt: 'Rest 4', copyright: 'original-restricted' }
                         ]
                     }
                 ],
@@ -1294,11 +1284,11 @@
                 blocks: [
                     {
                         type: 'aside',
-                        text: 'You decide the depth and direction of your interactions with these people. If it does not feel right, or if the other person\'s habits or behaviors make you uncomfortable, you can leave without any explanation. There is no loss in this. On the contrary, you can learn more skills in the process of communicating with others with proper relaxation and tension. In the future, when you meet new people, those who are worthy of your cherishing and those you can give your all to, you will not miss them.'
+                        text: `You decide the depth and direction of your interactions with these people. If it does not feel right, or if the other person's habits or behaviors make you uncomfortable, you can leave without any explanation. There is no loss in this. On the contrary, you can learn more skills in the process of communicating with others with proper relaxation and tension. In the future, when you meet new people, those who are worthy of your cherishing and those you can give your all to, you will not miss them.`
                     },
                     {
                         type: 'prose',
-                        text: '[]'
+                        text: `Recently, I've been chatting with foreign teachers for a while every day, and my spoken English has indeed improved. I've got some feelings about this. Don't be afraid to express yourself. Even if the other person doesn't understand what you say, so what? It's great if they do understand, and if not, just keep communicating. It's a language after all. There's no need to be furtive or overly cautious if you're not fluent. Be more generous. The most important thing is to be brave enough to speak up. Cherish the opportunity of having someone to listen and don't waste it. Be bold, follow your heart, and be earnest!\n\nI've come across foreign teachers from a small country in South Africa, the UK, and Australia. They're all nice people, each with their own characteristics. Some teachers may be a bit standoffish, while others can talk to you on an equal footing. A teacher named Callum impressed me particularly deeply. When explaining words, he could vividly demonstrate a dog sticking out its tongue for me. Don't be afraid when meeting more people. For now, they're just strangers. The initiative is in your hands. You decide the depth and direction of your interactions with these people. If it doesn't feel right, or if the other person's habits or behaviors make you uncomfortable, you can leave without any explanation. There's no loss in this. On the contrary, you can learn more skills in the process of communicating with others with proper relaxation and tension. In the future, when you meet new people, those who are worthy of your cherishing and those you can give your all to, you won't miss them.`
                     }
                 ],
                 selectedComments: []
@@ -1317,7 +1307,7 @@
                         type: 'gallery',
                         cols: 1,
                         images: [
-                            { src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/20250208232549661.JPG', alt: 'Academia visit', ratio: 'wide' }
+                            { src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/20250208232549661.JPG', alt: 'Academia visit', ratio: 'wide', copyright: 'original-restricted' }
                         ]
                     },
                     {
@@ -1341,10 +1331,10 @@
                         type: 'gallery',
                         cols: 4,
                         images: [
-                            { src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/IMG_6760.JPG', alt: 'SYSU 100th 1' },
-                            { src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/IMG_6756.JPG', alt: 'SYSU 100th 2' },
-                            { src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/IMG_6807.JPG', alt: 'SYSU 100th 3' },
-                            { src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/IMG_6759.JPG', alt: 'SYSU 100th 4' }
+                            { src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/IMG_6760.JPG', alt: 'SYSU 100th 1', copyright: 'original-restricted' },
+                            { src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/IMG_6756.JPG', alt: 'SYSU 100th 2', copyright: 'original-restricted' },
+                            { src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/IMG_6807.JPG', alt: 'SYSU 100th 3', copyright: 'original-restricted' },
+                            { src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/IMG_6759.JPG', alt: 'SYSU 100th 4', copyright: 'original-restricted' }
                         ],
                         caption: 'Sun Yat-sen University -- 100th Anniversary Celebration'
                     }
@@ -1387,7 +1377,7 @@
                         title: 'What! Snow in The Tropics?',
                         date: 'December 25, 2024',
                         location: 'Sun Yat-sen Univ.',
-                        caption: 'It\'s actually fake bubble snow.',
+                        caption: `It's actually fake bubble snow.`,
                         platform: 'bilibili',
                         id: 'BV1MvCaYHEfK',
                         cover: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/202502220023967.png',
@@ -1446,25 +1436,6 @@
                 ],
                 selectedComments: []
             },
-            // {
-            //     id: 'retrospect-2023',
-            //     date: 'February 10, 2024',
-            //     title: '2023 Retrospect',
-            //     tags: ['video', 'retrospect'],
-            //     blocks: [
-            //         {
-            //             type: 'prose',
-            //             text: 'I summarized my moments over the past year through a short video.'
-            //         },
-            //         {
-            //             type: 'video',
-            //             platform: 'bilibili',
-            //             id: 'BV1LH4y1h71m',
-            //             caption: '2023 Retrospect -- short video summary'
-            //         }
-            //     ],
-            //     selectedComments: []
-            // },
             {
                 id: 'ielts',
                 date: 'January 23, 2024',
@@ -1479,7 +1450,7 @@
                         type: 'gallery',
                         cols: 1,
                         images: [
-                            { src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/IMG_3809.JPG', alt: 'IELTS', ratio: 'wide' }
+                            { src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/IMG_3809.JPG', alt: 'IELTS', ratio: 'wide', copyright: 'original-restricted' }
                         ]
                     }
                 ],
@@ -1499,8 +1470,7 @@
                         type: 'video',
                         platform: 'bilibili',
                         id: 'BV1QN41147aW',
-                        caption: 'Tour the Changbai -- National Day 2023',
-                        // placeholder: true
+                        caption: 'Tour the Changbai -- National Day 2023'
                     }
                 ],
                 selectedComments: []
@@ -1568,7 +1538,7 @@
                         title: 'Skiing',
                         date: 'January 10, 2022',
                         location: 'Changchun',
-                        caption: 'I don\'t know how to ski, but it was fun.',
+                        caption: `I don't know how to ski, but it was fun.`,
                         src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/IMG_0768(20221219-215146).JPG',
                         copyright: 'original-free'
                     },
@@ -1617,7 +1587,7 @@
                         type: 'gallery',
                         cols: 1,
                         images: [
-                            { src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/IMG_4414(20240331-152358).JPG', alt: 'Winter in the North', ratio: 'wide' }
+                            { src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/IMG_4414(20240331-152358).JPG', alt: 'Winter in the North', ratio: 'wide', copyright: 'original-restricted' }
                         ]
                     }
                 ],
@@ -1628,19 +1598,7 @@
                 date: 'July 2021',
                 title: 'Chongqing Summer Vibe',
                 tags: ['photography', 'travel'],
-                blocks: [
-                    // {
-                    //     type: 'gallery',
-                    //     cols: 2,
-                    //     images: [
-                    //         { placeholder: true, alt: 'Chongqing 1' },
-                    //         { placeholder: true, alt: 'Chongqing 2' },
-                    //         { placeholder: true, alt: 'Chongqing 3' },
-                    //         { placeholder: true, alt: 'Chongqing 4' }
-                    //     ],
-                    //     caption: 'Chongqing -- Summer 2021'
-                    // }
-                ],
+                blocks: [],
                 selectedComments: [],
                 gallery: [
                     {
@@ -1675,7 +1633,7 @@
                         title: 'Setting Sun',
                         date: 'July 18, 2021',
                         location: 'Chongqing',
-                        caption: 'It\'s been a long time since I\'ve seen such a beautiful sunset.',
+                        caption: `It's been a long time since I've seen such a beautiful sunset.`,
                         src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/IMG_0751(20221219-214838).JPG',
                         copyright: 'original-free'
                     },
@@ -1693,7 +1651,7 @@
                         title: 'Dancing with Electric Eels',
                         date: 'July 19, 2021',
                         location: 'Chongqing',
-                        caption: 'It\'s a little scary to look at.',
+                        caption: `It's a little scary to look at.`,
                         src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/IMG_0756(20221219-214908).JPG',
                         copyright: 'original-restricted'
                     },
@@ -1767,19 +1725,7 @@
                 date: 'July 2017',
                 title: 'Beijing Tour Silhouette',
                 tags: ['photography', 'travel'],
-                blocks: [
-                    // {
-                    //     type: 'gallery',
-                    //     cols: 2,
-                    //     images: [
-                    //         { placeholder: true, alt: 'Beijing 1' },
-                    //         { placeholder: true, alt: 'Beijing 2' },
-                    //         { placeholder: true, alt: 'Beijing 3' },
-                    //         { placeholder: true, alt: 'Beijing 4' }
-                    //     ],
-                    //     caption: 'Beijing -- Summer 2017'
-                    // }
-                ],
+                blocks: [],
                 selectedComments: [],
                 gallery: [
                     {
@@ -1859,7 +1805,7 @@
                         title: 'The Badaling Great Wall',
                         date: 'July 17, 2017',
                         location: 'The Badaling Great Wall, Beijing',
-                        caption: 'The first time I went to the Great Wall I regretted that I didn\'t climb to the top, next time for sure!',
+                        caption: `The first time I went to the Great Wall I regretted that I didn't climb to the top, next time for sure!`,
                         src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/IMG_0743(20221219-214654).JPG',
                         copyright: 'original-restricted'
                     },
@@ -1908,20 +1854,28 @@
         }
 
         // =====================================================================
-        // COPYRIGHT TEXT GENERATOR
+        // COPYRIGHT BADGE
         // =====================================================================
-        function getCopyrightText(item) {
-            var media = (item.type === 'video') ? 'video' : 'photo';
-            if (item.copyright === 'original-free') {
-                return 'This ' + media + ' is original and welcome to reproduce.';
+        function getCopyrightBadgeHtml(copyright) {
+            if (!copyright) return '';
+            var cls, sym, label;
+            if (copyright === 'original-free') {
+                cls = 'rights-badge-free';
+                sym = '[+]';
+                label = 'free to reproduce';
+            } else if (copyright === 'original-restricted') {
+                cls = 'rights-badge-restricted';
+                sym = '[-]';
+                label = 'no reproduction';
+            } else if (copyright === 'repost') {
+                cls = 'rights-badge-repost';
+                sym = '[~]';
+                label = 'not original';
+            } else {
+                return '';
             }
-            if (item.copyright === 'original-restricted') {
-                return 'This ' + media + ' is original and unauthorized reproduction is prohibited.';
-            }
-            if (item.copyright === 'repost') {
-                return 'This ' + media + ' is not original.';
-            }
-            return '';
+            return '<span class="rights-badge ' + cls + '">' + sym + '</span>'
+                 + '<span class="rights-label">' + label + '</span>';
         }
 
         // =====================================================================
@@ -1960,6 +1914,7 @@
                         } else {
                             html += '<img src="' + escapeHtml(img.src) + '"'
                                   + ' alt="' + escapeHtml(img.alt || '') + '"'
+                                  + (img.copyright ? ' data-copyright="' + escapeHtml(img.copyright) + '"' : '')
                                   + ' loading="lazy">';
                         }
                         html += '</div>';
@@ -2310,7 +2265,7 @@
                 html += '<div class="gal-detail-img-wrap">'
                       + '<img src="' + escapeHtml(item.src) + '"'
                       + ' alt="' + escapeHtml(item.title) + '"'
-                      + ' onclick="openLightboxFromGallery(\'' + escapeHtml(item.src) + '\')">'
+                      + ' onclick="openLightboxFromGallery(\'' + escapeHtml(item.src) + '\',\'' + escapeHtml(item.copyright || '') + '\')">'
                       + '</div>';
             }
 
@@ -2329,13 +2284,14 @@
                       + '<span class="gal-detail-value">' + escapeHtml(item.location) + '</span>'
                       + '</div>';
             }
+            if (item.copyright) {
+                html += '<div class="gal-detail-row">'
+                      + '<span class="gal-detail-label">rights</span>'
+                      + '<span class="gal-detail-value">' + getCopyrightBadgeHtml(item.copyright) + '</span>'
+                      + '</div>';
+            }
             if (item.caption) {
                 html += '<div class="gal-detail-caption">' + escapeHtml(item.caption) + '</div>';
-            }
-            if (item.copyright) {
-                html += '<div class="gal-detail-copyright">'
-                      + escapeHtml(getCopyrightText(item))
-                      + '</div>';
             }
 
             html += '</div>';
@@ -2357,8 +2313,10 @@
             }
         }
 
-        function openLightboxFromGallery(src) {
+        function openLightboxFromGallery(src, copyright) {
             document.getElementById('lightbox-img').src = src;
+            var cap = document.getElementById('lightbox-caption');
+            if (cap) cap.innerHTML = copyright ? getCopyrightBadgeHtml(copyright) : '';
             document.getElementById('lightbox').classList.add('open');
         }
 
@@ -2416,19 +2374,24 @@
             var lightbox    = document.getElementById('lightbox');
             var lightboxImg = document.getElementById('lightbox-img');
 
+            function closeLightbox() {
+                lightbox.classList.remove('open');
+                lightboxImg.src = '';
+                var cap = document.getElementById('lightbox-caption');
+                if (cap) cap.innerHTML = '';
+            }
+
             // Entry gallery images (event delegation)
             document.getElementById('blog-content').addEventListener('click', function(e) {
                 var target = e.target;
                 if (target.tagName === 'IMG' && target.closest('.gallery-img-wrap')) {
                     lightboxImg.src = target.src;
+                    var copyright = target.getAttribute('data-copyright') || '';
+                    var cap = document.getElementById('lightbox-caption');
+                    if (cap) cap.innerHTML = copyright ? getCopyrightBadgeHtml(copyright) : '';
                     lightbox.classList.add('open');
                 }
             });
-
-            function closeLightbox() {
-                lightbox.classList.remove('open');
-                lightboxImg.src = '';
-            }
 
             document.getElementById('lightbox-close').addEventListener('click', closeLightbox);
             lightbox.addEventListener('click', function(e) {
