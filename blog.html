@@ -284,6 +284,28 @@
             min-width: 0;
         }
 
+        /* Clickable title (entry has a gallery) */
+        .entry-title-clickable {
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .entry-title-clickable:hover {
+            color: var(--accent-blue);
+            text-decoration: underline;
+            text-underline-offset: 3px;
+        }
+
+        .gal-title-hint {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            margin-left: 10px;
+            opacity: 0.7;
+            font-weight: normal;
+            vertical-align: middle;
+            letter-spacing: 0.04em;
+        }
+
         /* =====================================================================
            Entry Header Actions (LIKE + CMT inline in title row)
            ===================================================================== */
@@ -527,10 +549,10 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            animation: cmt-modal-enter 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+            animation: modal-enter 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
-        @keyframes cmt-modal-enter {
+        @keyframes modal-enter {
             from { opacity: 0; transform: scale(0.92) translateY(12px); }
             to   { opacity: 1; transform: scale(1) translateY(0); }
         }
@@ -589,7 +611,6 @@
             display: block;
         }
 
-        /* Selected Comments Section */
         .cmt-section {
             padding: 28px 28px 24px 28px;
         }
@@ -672,6 +693,296 @@
         }
 
         /* =====================================================================
+           Gallery Modal
+           ===================================================================== */
+        .gal-modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 3000;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .gal-modal-overlay.open {
+            display: flex;
+        }
+
+        .gal-modal-box {
+            background: var(--nav-bg);
+            border: 1px solid var(--bg-status);
+            border-radius: 18px;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+            width: 980px;
+            max-width: 96vw;
+            height: 88vh;
+            max-height: 88vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            animation: modal-enter 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .gal-modal-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--bg-status);
+            background: var(--bg-status);
+            flex-shrink: 0;
+        }
+
+        .gal-modal-title {
+            flex: 1;
+            text-align: center;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .gal-modal-body {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            min-height: 0;
+        }
+
+        /* Left: masonry grid pane */
+        .gal-grid-pane {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+            min-width: 0;
+        }
+
+        .gal-masonry {
+            columns: 3;
+            column-gap: 6px;
+        }
+
+        .gal-item {
+            break-inside: avoid;
+            margin-bottom: 6px;
+            cursor: pointer;
+            overflow: hidden;
+            background: var(--bg-status);
+            border: 2px solid transparent;
+            position: relative;
+            transition: border-color 0.2s;
+        }
+
+        .gal-item:hover {
+            border-color: var(--text-muted);
+        }
+
+        .gal-item.active {
+            border-color: var(--accent-blue);
+        }
+
+        .gal-item img {
+            width: 100%;
+            height: auto;
+            display: block;
+            transition: transform 0.3s;
+        }
+
+        .gal-item:hover img {
+            transform: scale(1.04);
+        }
+
+        .gal-video-badge {
+            position: absolute;
+            bottom: 6px;
+            left: 6px;
+            background: rgba(0, 0, 0, 0.72);
+            color: var(--accent-orange);
+            font-family: var(--font-mono);
+            font-size: 0.65rem;
+            padding: 2px 6px;
+            letter-spacing: 0.05em;
+        }
+
+        .gal-video-thumb-placeholder {
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            background: var(--bg-status);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+            font-size: 0.72rem;
+            letter-spacing: 0.04em;
+        }
+
+        /* Right: detail pane */
+        .gal-detail-pane {
+            width: 300px;
+            flex-shrink: 0;
+            border-left: 1px solid var(--bg-status);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .gal-nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--bg-status);
+            background: var(--bg-status);
+            flex-shrink: 0;
+        }
+
+        .gal-nav-btn {
+            background: none;
+            border: none;
+            font-family: var(--font-mono);
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 4px 8px;
+            transition: color 0.2s, opacity 0.2s;
+            letter-spacing: 0.03em;
+        }
+
+        .gal-nav-btn:hover {
+            color: var(--accent-orange);
+        }
+
+        .gal-nav-btn:disabled {
+            opacity: 0.25;
+            cursor: default;
+        }
+
+        .gal-nav-btn:disabled:hover {
+            color: var(--text-muted);
+        }
+
+        .gal-nav-count {
+            font-family: var(--font-mono);
+            font-size: 0.72rem;
+            color: var(--text-muted);
+        }
+
+        .gal-detail-scroll {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .gal-detail-img-wrap {
+            width: 100%;
+            background: var(--bg-status);
+            flex-shrink: 0;
+        }
+
+        .gal-detail-img-wrap img {
+            width: 100%;
+            height: auto;
+            display: block;
+            cursor: zoom-in;
+            transition: transform 0.3s;
+        }
+
+        .gal-detail-img-wrap img:hover {
+            transform: scale(1.02);
+        }
+
+        .gal-detail-video-wrap {
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            background: var(--bg-status);
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .gal-detail-video-wrap iframe {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .gal-detail-meta {
+            padding: 16px;
+            flex: 1;
+        }
+
+        .gal-detail-title {
+            font-family: var(--font-mono);
+            font-size: 0.88rem;
+            color: var(--accent-magenta);
+            margin-bottom: 14px;
+            line-height: 1.4;
+        }
+
+        .gal-detail-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 6px;
+            align-items: baseline;
+        }
+
+        .gal-detail-label {
+            font-family: var(--font-mono);
+            font-size: 0.68rem;
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }
+
+        .gal-detail-label::before { content: "// "; }
+
+        .gal-detail-value {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--accent-green);
+            word-break: break-word;
+        }
+
+        .gal-detail-caption {
+            font-family: var(--font-prose);
+            font-size: 0.875rem;
+            color: var(--text-main);
+            font-style: italic;
+            line-height: 1.7;
+            margin: 14px 0;
+            border-left: 2px solid var(--accent-magenta);
+            padding-left: 10px;
+        }
+
+        .gal-detail-copyright {
+            font-family: var(--font-mono);
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            margin-top: 14px;
+            padding-top: 12px;
+            border-top: 1px solid var(--bg-status);
+            line-height: 1.6;
+        }
+
+        .gal-detail-empty {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            letter-spacing: 0.04em;
+        }
+
+        /* =====================================================================
            Lightbox
            ===================================================================== */
         #lightbox {
@@ -750,6 +1061,17 @@
             .manu-item { padding: 8px 18px; gap: 10px; }
             .manu-item-date { font-size: 0.7rem; }
             .manu-item-title { font-size: 0.72rem; }
+
+            /* Gallery modal stacks on mobile */
+            .gal-modal-body { flex-direction: column; }
+            .gal-detail-pane {
+                width: 100%;
+                border-left: none;
+                border-top: 1px solid var(--bg-status);
+                max-height: 50vh;
+            }
+            .gal-grid-pane { max-height: 40vh; }
+            .gal-masonry { columns: 2; }
         }
     </style>
 </head>
@@ -768,7 +1090,7 @@
         <div class="fixed-btn" id="themeBtn">THEME</div>
     </div>
 
-    <!-- Comment Modal (global, single instance, populated per article) -->
+    <!-- Comment Modal -->
     <div class="cmt-modal-overlay" id="cmtModal">
         <div class="cmt-modal-box">
             <div class="cmt-modal-header">
@@ -786,6 +1108,35 @@
                 <div class="cmt-section">
                     <div class="cmt-section-title">Selected_Comments</div>
                     <div id="cmtSelectedComments"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gallery Modal -->
+    <div class="gal-modal-overlay" id="galModal">
+        <div class="gal-modal-box">
+            <div class="gal-modal-header">
+                <div class="cmt-modal-traffic">
+                    <span class="btn-close" id="galModalClose"></span>
+                    <span class="btn-min"></span>
+                    <span class="btn-max"></span>
+                </div>
+                <div class="gal-modal-title" id="galModalTitle"></div>
+            </div>
+            <div class="gal-modal-body">
+                <div class="gal-grid-pane">
+                    <div class="gal-masonry" id="galMasonry"></div>
+                </div>
+                <div class="gal-detail-pane">
+                    <div class="gal-nav">
+                        <button class="gal-nav-btn" id="galNavPrevBtn" onclick="galNavPrev()">[PREV]</button>
+                        <span class="gal-nav-count" id="galNavCount"></span>
+                        <button class="gal-nav-btn" id="galNavNextBtn" onclick="galNavNext()">[NEXT]</button>
+                    </div>
+                    <div class="gal-detail-scroll" id="galDetailScroll">
+                        <div class="gal-detail-empty">select an item</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -832,38 +1183,43 @@
         var LIKED_POSTS_KEY    = 'tetean-blog-liked';
 
         // =====================================================================
+        // GALLERY ITEM SCHEMA
+        //
+        // Each post can have an optional `gallery` array. To add photos or
+        // videos, append objects to that array -- no HTML knowledge required.
+        //
+        // Photo item:
+        //   {
+        //     type     : 'photo',
+        //     title    : 'Display title',
+        //     date     : 'Month DD, YYYY',   // leave '' if unknown
+        //     location : 'City, Venue',       // leave '' if unknown
+        //     caption  : 'What to say.',      // leave '' if none
+        //     src      : 'https://direct-image-url',
+        //     copyright: 'original-free'      // see options below
+        //   }
+        //
+        // Video item:
+        //   {
+        //     type     : 'video',
+        //     title    : 'Display title',
+        //     date     : 'Month DD, YYYY',
+        //     location : 'City, Venue',
+        //     caption  : 'What to say.',
+        //     platform : 'bilibili',           // or 'youtube'
+        //     id       : 'BV1xxxxxxxxx',       // video ID string
+        //     cover    : 'https://cover-url',  // thumbnail; leave '' for placeholder
+        //     copyright: 'original-free'
+        //   }
+        //
+        // Copyright presets (system generates the full sentence automatically):
+        //   'original-free'       -- original work, welcome to reproduce
+        //   'original-restricted' -- original work, no reproduction allowed
+        //   'repost'              -- not original
+        // =====================================================================
+
+        // =====================================================================
         // BLOG DATA
-        //
-        // To add a new post, copy one of the objects below and fill in:
-        //   id       -- unique slug, e.g. 'my-new-post' (lowercase, hyphens)
-        //   date     -- display string, e.g. 'June 1, 2026'
-        //   title    -- article title
-        //   tags     -- array of tag strings
-        //   blocks   -- array of content blocks (see types below)
-        //   selectedComments -- array of curated comments to show in the modal
-        //
-        // Block types:
-        //
-        //   { type: 'prose', text: '...' }
-        //     Plain text. Separate paragraphs with a blank line (\n\n).
-        //     Supports **bold** and [link text](url).
-        //
-        //   { type: 'aside', text: '...' }
-        //     Italic quote/callout block.
-        //
-        //   { type: 'gallery', cols: 2, images: [...], caption: '...' }
-        //     Image grid. cols: 1, 2, 3, or 4.
-        //     Each image: { src: 'https://...', alt: '...', ratio: 'wide'|'tall'|'' }
-        //     Use { placeholder: true, alt: '...' } for unavailable images.
-        //     caption is optional.
-        //
-        //   { type: 'video', platform: 'youtube'|'bilibili', id: 'VIDEO_ID', caption: '...' }
-        //     Embedded video. Set placeholder: true when the video ID is unknown.
-        //
-        // selectedComments format:
-        //   { date: '2025.10.01', author: 'Name', body: '...', replies: [
-        //     { author: 'Xiean Wang', date: '2025.10.02', body: '...' }
-        //   ]}
         // =====================================================================
         var BLOG_POSTS = [
             {
@@ -996,6 +1352,50 @@
                 selectedComments: []
             },
             {
+                id: 'sysu-moments',
+                date: 'April - December 2024',
+                title: 'My Moments at SYSU',
+                tags: ['photography', 'campus', 'guangzhou'],
+                blocks: [
+                    {
+                        type: 'aside',
+                        text: 'A collection of snapshots from my time at Sun Yat-sen University -- click the title to browse.'
+                    }
+                ],
+                selectedComments: [],
+                gallery: [
+                    {
+                        type: 'photo',
+                        title: 'Balcony View of The Laboratory',
+                        date: 'April 17, 2024',
+                        location: 'Sun Yat-sen Univ.',
+                        caption: 'Surprisingly, I can see the landmark - Canton Tower.',
+                        src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/202502220014164.JPG',
+                        copyright: 'original-free'
+                    },
+                    {
+                        type: 'photo',
+                        title: 'Castle?',
+                        date: 'May 5, 2024',
+                        location: 'Liuhuahu Park, Guangzhou',
+                        caption: 'Full score of toning.',
+                        src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/202502220017261.JPG',
+                        copyright: 'original-restricted'
+                    },
+                    {
+                        type: 'video',
+                        title: 'What! Snow in The Tropics?',
+                        date: 'December 25, 2024',
+                        location: 'Sun Yat-sen Univ.',
+                        caption: 'It\'s actually fake bubble snow.',
+                        platform: 'bilibili',
+                        id: 'BV1MvCaYHEfK',
+                        cover: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/202502220023967.png',
+                        copyright: 'original-free'
+                    }
+                ]
+            },
+            {
                 id: 'lanterns',
                 date: 'September 17, 2024',
                 title: 'Mid-autumn Festival Lanterns',
@@ -1096,7 +1496,6 @@
                         text: 'At the end of National Day, after being admitted to graduate school, I went to Changbai Mountain. Life is all about enjoying!'
                     },
                     {
-                        // TODO: set placeholder: false and fill in id when the Bilibili BV ID is available
                         type: 'video',
                         platform: 'bilibili',
                         id: '',
@@ -1105,6 +1504,104 @@
                     }
                 ],
                 selectedComments: []
+            },
+            {
+                id: 'jlu-moments',
+                date: 'January 2022 - July 2023',
+                title: 'My Moments at JLU',
+                tags: ['photography', 'campus', 'changchun'],
+                blocks: [
+                    {
+                        type: 'aside',
+                        text: 'A collection of snapshots from my undergraduate years at Jilin University -- click the title to browse.'
+                    }
+                ],
+                selectedComments: [],
+                gallery: [
+                    {
+                        type: 'photo',
+                        title: "JLU's Spring",
+                        date: '',
+                        location: 'Jilin Univ., China',
+                        caption: 'The swans at Qinghu are the most beautiful animals in the school, and the school logo is a swan.',
+                        src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/IMG_4441(20240313-233720).JPG',
+                        copyright: 'repost'
+                    },
+                    {
+                        type: 'photo',
+                        title: "JLU's Summer",
+                        date: '',
+                        location: 'Jilin Univ., Changchun',
+                        caption: '',
+                        src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/IMG_4255(20240313-233420).PNG',
+                        copyright: 'repost'
+                    },
+                    {
+                        type: 'photo',
+                        title: "JLU's Autumn",
+                        date: '',
+                        location: 'Jilin Univ., Changchun',
+                        caption: '',
+                        src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/IMG_4258(20240324-102115).PNG',
+                        copyright: 'repost'
+                    },
+                    {
+                        type: 'photo',
+                        title: "JLU's Winter",
+                        date: '',
+                        location: 'Jilin Univ., China',
+                        caption: '',
+                        src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/IMG_4257(20240331-222515).PNG',
+                        copyright: 'repost'
+                    },
+                    {
+                        type: 'photo',
+                        title: 'Greeting Snowman',
+                        date: 'January 10, 2022',
+                        location: 'Jingyue Lake, Changchun',
+                        caption: 'Hello! Snowman.',
+                        src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/IMG_0769(20221219-215151).JPG',
+                        copyright: 'original-free'
+                    },
+                    {
+                        type: 'photo',
+                        title: 'Skiing',
+                        date: 'January 10, 2022',
+                        location: 'Changchun',
+                        caption: 'I don\'t know how to ski, but it was fun.',
+                        src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/IMG_0768(20221219-215146).JPG',
+                        copyright: 'original-free'
+                    },
+                    {
+                        type: 'photo',
+                        title: 'Lingering Light of the Setting Sun',
+                        date: 'May 27, 2023',
+                        location: 'Jilin Univ., Changchun',
+                        caption: 'Sunshine on the face, warm and cozy.',
+                        src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/IMG_1526(20230607-101910).JPG',
+                        copyright: 'original-restricted'
+                    },
+                    {
+                        type: 'photo',
+                        title: 'Blow away a Dandelion',
+                        date: 'May 27, 2023',
+                        location: 'Changchun',
+                        caption: 'This dandelion is so difficult to blow.',
+                        src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/IMG_1532(20230607-101910).JPG',
+                        copyright: 'original-restricted'
+                    },
+                    {
+                        type: 'video',
+                        title: 'Walking in the Rain',
+                        date: 'July 6, 2023',
+                        location: 'Jilin Univ., Changchun',
+                        caption: 'So love the rain, always gives me a special feeling.',
+                        platform: 'bilibili',
+                        id: 'BV1cP411v7Js',
+                        cover: '',
+                        copyright: 'original-free'
+                    }
+                ]
             },
             {
                 id: 'winter-north',
@@ -1133,7 +1630,6 @@
                 tags: ['photography', 'travel'],
                 blocks: [
                     {
-                        // TODO: replace placeholder images with actual src URLs when available
                         type: 'gallery',
                         cols: 2,
                         images: [
@@ -1145,7 +1641,126 @@
                         caption: 'Chongqing -- Summer 2021'
                     }
                 ],
-                selectedComments: []
+                selectedComments: [],
+                gallery: [
+                    {
+                        type: 'photo',
+                        title: 'An Aircraft Carrier?',
+                        date: 'July 18, 2021',
+                        location: 'Chongqing',
+                        caption: 'The styling is oh so quirky.',
+                        src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/IMG_0746(20221219-214753).JPG',
+                        copyright: 'original-free'
+                    },
+                    {
+                        type: 'photo',
+                        title: 'Bridge',
+                        date: 'July 18, 2021',
+                        location: 'Chongqing',
+                        caption: 'An ordinary bridge.',
+                        src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/IMG_0748(20221219-214803).JPG',
+                        copyright: 'original-free'
+                    },
+                    {
+                        type: 'photo',
+                        title: 'Riverscape',
+                        date: 'July 18, 2021',
+                        location: 'Chongqing',
+                        caption: 'When I first took the picture, I thought it was the wide angle of the photo that bent the building, and when I subconsciously moved my cell phone away to take a look, it turned out that the building was in this shape!',
+                        src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/IMG_0747(20221219-214759).JPG',
+                        copyright: 'original-restricted'
+                    },
+                    {
+                        type: 'photo',
+                        title: 'Setting Sun',
+                        date: 'July 18, 2021',
+                        location: 'Chongqing',
+                        caption: 'It\'s been a long time since I\'ve seen such a beautiful sunset.',
+                        src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/IMG_0751(20221219-214838).JPG',
+                        copyright: 'original-free'
+                    },
+                    {
+                        type: 'photo',
+                        title: 'Very Beautiful Night View of the River',
+                        date: 'July 18, 2021',
+                        location: 'Chongqing',
+                        caption: 'Are the photo skills any good? LoL',
+                        src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/IMG_0750(20221219-214817).JPG',
+                        copyright: 'original-restricted'
+                    },
+                    {
+                        type: 'photo',
+                        title: 'Dancing with Electric Eels',
+                        date: 'July 19, 2021',
+                        location: 'Chongqing',
+                        caption: 'It\'s a little scary to look at.',
+                        src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/IMG_0756(20221219-214908).JPG',
+                        copyright: 'original-restricted'
+                    },
+                    {
+                        type: 'photo',
+                        title: "Fish's Kisses",
+                        date: 'July 19, 2021',
+                        location: 'Chongqing',
+                        caption: 'Two little fish seem to be kissing.',
+                        src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/IMG_0754(20221219-214853).JPG',
+                        copyright: 'original-restricted'
+                    },
+                    {
+                        type: 'photo',
+                        title: 'Foolish Fish',
+                        date: 'July 19, 2021',
+                        location: 'Chongqing',
+                        caption: 'Cute animals.',
+                        src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/IMG_0753(20221219-214848).JPG',
+                        copyright: 'original-restricted'
+                    },
+                    {
+                        type: 'photo',
+                        title: 'Light Rail Through the Building',
+                        date: 'July 19, 2021',
+                        location: 'Chongqing',
+                        caption: 'Punching the clock!',
+                        src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/IMG_0752(20221219-214843).JPG',
+                        copyright: 'original-free'
+                    },
+                    {
+                        type: 'photo',
+                        title: 'Penguins Cooling off under the Air Conditioning',
+                        date: 'July 19, 2021',
+                        location: 'Chongqing',
+                        caption: 'Penguins are so afraid of the heat.',
+                        src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/IMG_0755(20221219-214904).JPG',
+                        copyright: 'original-restricted'
+                    },
+                    {
+                        type: 'photo',
+                        title: 'Mountain',
+                        date: 'July 20, 2021',
+                        location: 'Wulong, Chongqing',
+                        caption: 'That was close!',
+                        src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/IMG_0757(20221219-214918).JPG',
+                        copyright: 'original-free'
+                    },
+                    {
+                        type: 'photo',
+                        title: 'Buildings on the Mountain',
+                        date: 'July 21, 2021',
+                        location: 'Chiyou Jiuli City, Chongqing',
+                        caption: 'Another unique building.',
+                        src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/IMG_0758(20221219-214922).JPG',
+                        copyright: 'original-free'
+                    },
+                    {
+                        type: 'photo',
+                        title: "People's Liberation Monument",
+                        date: 'July 21, 2021',
+                        location: 'Chongqing',
+                        caption: 'salute',
+                        src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/IMG_0759(20221219-214928).JPG',
+                        copyright: 'original-free'
+                    }
+                ]
             },
             {
                 id: 'beijing',
@@ -1154,7 +1769,6 @@
                 tags: ['photography', 'travel'],
                 blocks: [
                     {
-                        // TODO: replace placeholder images with actual src URLs when available
                         type: 'gallery',
                         cols: 2,
                         images: [
@@ -1166,7 +1780,108 @@
                         caption: 'Beijing -- Summer 2017'
                     }
                 ],
-                selectedComments: []
+                selectedComments: [],
+                gallery: [
+                    {
+                        type: 'photo',
+                        title: 'Guns at the Anti-Japanese War Memorial Museum',
+                        date: 'July 14, 2017',
+                        location: 'Beijing',
+                        caption: 'Emotions abound.',
+                        src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/IMG_0732(20221219-214334).JPG',
+                        copyright: 'original-free'
+                    },
+                    {
+                        type: 'photo',
+                        title: 'Wanping Fortress',
+                        date: 'July 17, 2017',
+                        location: 'Beijing',
+                        caption: 'Nice and high.',
+                        src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/IMG_0731(20221219-214324).JPG',
+                        copyright: 'original-free'
+                    },
+                    {
+                        type: 'photo',
+                        title: 'Beijing Normal University',
+                        date: 'July 15, 2017',
+                        location: 'Beijing Normal University',
+                        caption: 'Hats off to the teacher! Respect.',
+                        src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/IMG_0735(20221219-214503).JPG',
+                        copyright: 'original-free'
+                    },
+                    {
+                        type: 'photo',
+                        title: 'Flag Raising at Tiananmen Square -- No.1',
+                        date: 'July 16, 2017',
+                        location: 'Tiananmen Square, Beijing',
+                        caption: 'Tired of waking up early, but happy!',
+                        src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/IMG_0736(20221219-214528).JPG',
+                        copyright: 'original-free'
+                    },
+                    {
+                        type: 'photo',
+                        title: 'Flag Raising at Tiananmen Square -- No.2',
+                        date: 'July 16, 2017',
+                        location: 'Tiananmen Square, Beijing',
+                        caption: 'Tired of waking up early, but happy!',
+                        src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/IMG_0737(20221219-214537).JPG',
+                        copyright: 'original-free'
+                    },
+                    {
+                        type: 'photo',
+                        title: 'A View of the Summer Palace',
+                        date: 'July 16, 2017',
+                        location: 'Beijing',
+                        caption: 'Broken walls and greenery.',
+                        src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/IMG_0738(20221219-214549).JPG',
+                        copyright: 'original-restricted'
+                    },
+                    {
+                        type: 'photo',
+                        title: 'Rockets at the Science Museum',
+                        date: 'July 16, 2017',
+                        location: 'Beijing',
+                        caption: 'It looked awesome.',
+                        src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/IMG_0740(20221219-214621).JPG',
+                        copyright: 'original-free'
+                    },
+                    {
+                        type: 'photo',
+                        title: 'Beijing 2008 Olympic',
+                        date: 'July 17, 2017',
+                        location: 'Beijing',
+                        caption: 'Thinking about the year of the 08 Olympics, pure memories of that year...',
+                        src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/IMG_0742(20221219-214643).JPG',
+                        copyright: 'original-free'
+                    },
+                    {
+                        type: 'photo',
+                        title: 'The Badaling Great Wall',
+                        date: 'July 17, 2017',
+                        location: 'The Badaling Great Wall, Beijing',
+                        caption: 'The first time I went to the Great Wall I regretted that I didn\'t climb to the top, next time for sure!',
+                        src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/IMG_0743(20221219-214654).JPG',
+                        copyright: 'original-restricted'
+                    },
+                    {
+                        type: 'photo',
+                        title: 'Daya Hall of Peking University',
+                        date: 'July 17, 2017',
+                        location: 'Peking Univ.',
+                        caption: 'Dream school of love, LOL.',
+                        src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/IMG_0744(20221219-214701).JPG',
+                        copyright: 'original-free'
+                    },
+                    {
+                        type: 'photo',
+                        title: 'Tsinghua University',
+                        date: 'July 18, 2017',
+                        location: 'Tsinghua Univ., Beijing',
+                        caption: 'My dream school.',
+                        src: 'https://raw.githubusercontent.com/tetean/cartographic_bed/main/notion_pic/IMG_0745(20221219-214708).JPG',
+                        copyright: 'original-free'
+                    }
+                ]
             }
         ];
 
@@ -1190,6 +1905,23 @@
 
         function titleToSlug(title) {
             return title.replace(/\s+/g, '_').replace(/[^A-Za-z0-9_\-]/g, '');
+        }
+
+        // =====================================================================
+        // COPYRIGHT TEXT GENERATOR
+        // =====================================================================
+        function getCopyrightText(item) {
+            var media = (item.type === 'video') ? 'video' : 'photo';
+            if (item.copyright === 'original-free') {
+                return 'This ' + media + ' is original and welcome to reproduce.';
+            }
+            if (item.copyright === 'original-restricted') {
+                return 'This ' + media + ' is original and unauthorized reproduction is prohibited.';
+            }
+            if (item.copyright === 'repost') {
+                return 'This ' + media + ' is not original.';
+            }
+            return '';
         }
 
         // =====================================================================
@@ -1276,6 +2008,7 @@
 
         function renderPost(post) {
             var liked = isPostLiked(post.id);
+            var hasGallery = post.gallery && post.gallery.length > 0;
 
             var tagsHtml = '';
             if (post.tags && post.tags.length) {
@@ -1306,13 +2039,24 @@
               + ' onclick="openCommentModal(\'' + post.id + '\')">[CMT]</button>'
               + '</div>';
 
+            var titleHtml;
+            if (hasGallery) {
+                titleHtml = '<h2 class="entry-title entry-title-clickable"'
+                          + ' onclick="openGalleryModal(\'' + post.id + '\')">'
+                          + escapeHtml(post.title)
+                          + '<span class="gal-title-hint">[gallery]</span>'
+                          + '</h2>';
+            } else {
+                titleHtml = '<h2 class="entry-title">' + escapeHtml(post.title) + '</h2>';
+            }
+
             return '<article class="blog-entry"'
                  + ' id="post-' + post.id + '"'
                  + ' data-post-id="' + post.id + '"'
                  + ' data-post-title="' + escapeHtml(post.title) + '">'
                  + '<div class="entry-header">'
                  + '<span class="entry-date">' + escapeHtml(post.date) + '</span>'
-                 + '<h2 class="entry-title">' + escapeHtml(post.title) + '</h2>'
+                 + titleHtml
                  + headerActionsHtml
                  + '</div>'
                  + tagsHtml
@@ -1332,10 +2076,6 @@
 
         // =====================================================================
         // LIKES
-        // API: countapi.mileshilliard.com
-        //   GET /api/v1/get/{key}   -> { value: "N" }  (404 if key not yet set)
-        //   GET /api/v1/hit/{key}   -> { value: "N" }  (creates key on first hit)
-        // Keys: tetean-xiean-blog-{post-id}
         // =====================================================================
         function getLikedPosts() {
             try {
@@ -1476,6 +2216,153 @@
         }
 
         // =====================================================================
+        // GALLERY MODAL
+        // =====================================================================
+        var galState = {
+            items: [],
+            selectedIndex: -1
+        };
+
+        function openGalleryModal(postId) {
+            var post = null;
+            for (var i = 0; i < BLOG_POSTS.length; i++) {
+                if (BLOG_POSTS[i].id === postId) { post = BLOG_POSTS[i]; break; }
+            }
+            if (!post || !post.gallery || !post.gallery.length) return;
+
+            galState.items = post.gallery;
+            galState.selectedIndex = 0;
+
+            document.getElementById('galModalTitle').textContent =
+                'gallery -- ' + post.title;
+
+            renderGalleryGrid();
+            selectGalleryItem(0);
+            document.getElementById('galModal').classList.add('open');
+        }
+
+        function closeGalleryModal() {
+            document.getElementById('galModal').classList.remove('open');
+        }
+
+        function renderGalleryGrid() {
+            var masonry = document.getElementById('galMasonry');
+            var html = '';
+            galState.items.forEach(function(item, i) {
+                var activeClass = (i === galState.selectedIndex) ? ' active' : '';
+                html += '<div class="gal-item' + activeClass + '" onclick="selectGalleryItem(' + i + ')">';
+                if (item.type === 'video') {
+                    if (item.cover) {
+                        html += '<img src="' + escapeHtml(item.cover) + '"'
+                              + ' alt="' + escapeHtml(item.title) + '" loading="lazy">';
+                    } else {
+                        html += '<div class="gal-video-thumb-placeholder">[VIDEO]</div>';
+                    }
+                    html += '<div class="gal-video-badge">[VIDEO]</div>';
+                } else {
+                    html += '<img src="' + escapeHtml(item.src) + '"'
+                          + ' alt="' + escapeHtml(item.title) + '" loading="lazy">';
+                }
+                html += '</div>';
+            });
+            masonry.innerHTML = html;
+        }
+
+        function selectGalleryItem(index) {
+            galState.selectedIndex = index;
+            var item = galState.items[index];
+            if (!item) return;
+
+            // Update active class in grid
+            var gridItems = document.querySelectorAll('.gal-item');
+            gridItems.forEach(function(el, i) {
+                el.classList.toggle('active', i === index);
+            });
+
+            // Scroll active item into view within grid pane
+            if (gridItems[index]) {
+                gridItems[index].scrollIntoView({ block: 'nearest' });
+            }
+
+            // Update prev/next buttons
+            var prevBtn = document.getElementById('galNavPrevBtn');
+            var nextBtn = document.getElementById('galNavNextBtn');
+            prevBtn.disabled = (index <= 0);
+            nextBtn.disabled = (index >= galState.items.length - 1);
+            document.getElementById('galNavCount').textContent =
+                (index + 1) + ' / ' + galState.items.length;
+
+            // Build detail pane content
+            var html = '';
+
+            if (item.type === 'video') {
+                var src = '';
+                if (item.platform === 'bilibili') {
+                    src = 'https://player.bilibili.com/player.html?bvid='
+                        + escapeHtml(item.id) + '&page=1&autoplay=0';
+                } else if (item.platform === 'youtube') {
+                    src = 'https://www.youtube.com/embed/' + escapeHtml(item.id);
+                }
+                html += '<div class="gal-detail-video-wrap">'
+                      + '<iframe src="' + src + '" scrolling="no" allowfullscreen></iframe>'
+                      + '</div>';
+            } else {
+                html += '<div class="gal-detail-img-wrap">'
+                      + '<img src="' + escapeHtml(item.src) + '"'
+                      + ' alt="' + escapeHtml(item.title) + '"'
+                      + ' onclick="openLightboxFromGallery(\'' + escapeHtml(item.src) + '\')">'
+                      + '</div>';
+            }
+
+            html += '<div class="gal-detail-meta">';
+            html += '<div class="gal-detail-title">' + escapeHtml(item.title) + '</div>';
+
+            if (item.date) {
+                html += '<div class="gal-detail-row">'
+                      + '<span class="gal-detail-label">date</span>'
+                      + '<span class="gal-detail-value">' + escapeHtml(item.date) + '</span>'
+                      + '</div>';
+            }
+            if (item.location) {
+                html += '<div class="gal-detail-row">'
+                      + '<span class="gal-detail-label">location</span>'
+                      + '<span class="gal-detail-value">' + escapeHtml(item.location) + '</span>'
+                      + '</div>';
+            }
+            if (item.caption) {
+                html += '<div class="gal-detail-caption">' + escapeHtml(item.caption) + '</div>';
+            }
+            if (item.copyright) {
+                html += '<div class="gal-detail-copyright">'
+                      + escapeHtml(getCopyrightText(item))
+                      + '</div>';
+            }
+
+            html += '</div>';
+
+            var scroll = document.getElementById('galDetailScroll');
+            scroll.innerHTML = html;
+            scroll.scrollTop = 0;
+        }
+
+        function galNavPrev() {
+            if (galState.selectedIndex > 0) {
+                selectGalleryItem(galState.selectedIndex - 1);
+            }
+        }
+
+        function galNavNext() {
+            if (galState.selectedIndex < galState.items.length - 1) {
+                selectGalleryItem(galState.selectedIndex + 1);
+            }
+        }
+
+        function openLightboxFromGallery(src) {
+            document.getElementById('lightbox-img').src = src;
+            document.getElementById('lightbox').classList.add('open');
+        }
+
+        // =====================================================================
         // MANU (Table of Contents)
         // =====================================================================
         function closeManu() {
@@ -1523,12 +2410,13 @@
         }
 
         // =====================================================================
-        // LIGHTBOX (event delegation -- works on dynamically rendered images)
+        // LIGHTBOX
         // =====================================================================
         function initLightbox() {
             var lightbox    = document.getElementById('lightbox');
             var lightboxImg = document.getElementById('lightbox-img');
 
+            // Entry gallery images (event delegation)
             document.getElementById('blog-content').addEventListener('click', function(e) {
                 var target = e.target;
                 if (target.tagName === 'IMG' && target.closest('.gallery-img-wrap')) {
@@ -1547,11 +2435,17 @@
                 if (e.target === lightbox) closeLightbox();
             });
 
+            // Global keyboard handler
             document.addEventListener('keydown', function(e) {
-                if (e.key !== 'Escape') return;
-                closeLightbox();
-                closeCommentModal();
-                closeManu();
+                if (e.key === 'Escape') {
+                    closeLightbox();
+                    closeCommentModal();
+                    closeGalleryModal();
+                    closeManu();
+                } else if (document.getElementById('galModal').classList.contains('open')) {
+                    if (e.key === 'ArrowLeft')  galNavPrev();
+                    if (e.key === 'ArrowRight') galNavNext();
+                }
             });
         }
 
@@ -1584,7 +2478,7 @@
         }
 
         // =====================================================================
-        // STATUS BAR -- scroll percent + current article detection
+        // STATUS BAR
         // =====================================================================
         function initStatusBar() {
             var statusRight = document.getElementById('statusRight');
@@ -1659,9 +2553,16 @@
             loadAllLikeCounts();
             initManu();
 
+            // Comment modal close
             document.getElementById('cmtModalClose').addEventListener('click', closeCommentModal);
             document.getElementById('cmtModal').addEventListener('click', function(e) {
                 if (e.target === this) closeCommentModal();
+            });
+
+            // Gallery modal close
+            document.getElementById('galModalClose').addEventListener('click', closeGalleryModal);
+            document.getElementById('galModal').addEventListener('click', function(e) {
+                if (e.target === this) closeGalleryModal();
             });
         };
     </script>
