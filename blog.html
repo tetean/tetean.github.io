@@ -65,18 +65,6 @@
             z-index: 1000;
         }
 
-        .nav-home {
-            display: inline-block;
-            padding: 10px 20px;
-            color: var(--text-muted);
-            text-decoration: none;
-            border-right: 1px solid var(--bg-status);
-            font-size: 0.8rem;
-            transition: background 0.2s;
-        }
-
-        .nav-home:hover { background: var(--bg-status); color: var(--text-main); }
-
         .nav-title {
             display: flex;
             align-items: center;
@@ -203,6 +191,45 @@
             font-size: 1.05rem;
             font-weight: normal;
             color: var(--accent-magenta);
+            flex: 1;
+            min-width: 0;
+        }
+
+        /* =====================================================================
+           Entry Header Actions (LIKE + CMT inline in title row)
+           ===================================================================== */
+        .entry-header-actions {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-shrink: 0;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            font-family: var(--font-mono);
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 0;
+            letter-spacing: 0.03em;
+            transition: color 0.2s;
+            white-space: nowrap;
+        }
+
+        .action-btn:hover {
+            color: var(--accent-orange);
+        }
+
+        .action-btn.liked {
+            color: var(--accent-green);
+            cursor: default;
+        }
+
+        .action-btn.liked:hover {
+            color: var(--accent-green);
         }
 
         .entry-tags {
@@ -356,44 +383,6 @@
             font-size: 0.72rem;
             color: var(--text-muted);
             margin-top: 6px;
-        }
-
-        /* =====================================================================
-           Entry Action Bar (LIKE + CMT)
-           ===================================================================== */
-        .entry-actions {
-            display: flex;
-            justify-content: flex-end;
-            align-items: center;
-            gap: 24px;
-            margin-top: 28px;
-            padding-top: 16px;
-            border-top: 1px solid var(--bg-status);
-        }
-
-        .action-btn {
-            background: none;
-            border: none;
-            font-family: var(--font-mono);
-            font-size: 0.82rem;
-            color: var(--text-muted);
-            cursor: pointer;
-            padding: 4px 0;
-            letter-spacing: 0.03em;
-            transition: color 0.2s;
-        }
-
-        .action-btn:hover {
-            color: var(--accent-orange);
-        }
-
-        .action-btn.liked {
-            color: var(--accent-green);
-            cursor: default;
-        }
-
-        .action-btn.liked:hover {
-            color: var(--accent-green);
         }
 
         /* =====================================================================
@@ -644,13 +633,14 @@
             .gallery-2, .gallery-3 { grid-template-columns: 1fr; }
             .gallery-4 { grid-template-columns: 1fr 1fr; }
             .fixed-btn-group { bottom: 60px; right: 18px; }
+            .entry-header { flex-wrap: wrap; }
+            .entry-header-actions { margin-left: 0; margin-top: 4px; }
         }
     </style>
 </head>
 <body>
 
     <nav>
-        <a class="nav-home" href="index.html">&larr; index</a>
         <span class="nav-title">blog.log</span>
     </nav>
 
@@ -706,7 +696,7 @@
     <div class="status-line">
         <div class="status-left">
             <div class="mode" id="vimMode">NORMAL</div>
-            <div style="color:var(--text-main);">~/blog.log [+]</div>
+            <div style="color:var(--text-main);" id="statusPath">~/blog.log [+]</div>
             <span class="cursor"></span>
         </div>
         <div class="status-right" id="statusRight">utf-8 | blog | 0%</div>
@@ -715,8 +705,6 @@
     <script>
         // =====================================================================
         // CONFIG
-        // Replace COMMENT_IFRAME_URL with your own form URL.
-        // COUNTER_NAMESPACE scopes all like keys under one project.
         // =====================================================================
         var COUNTER_NAMESPACE  = 'tetean-blog';
         var COMMENT_IFRAME_URL = 'https://www.wjx.top/vm/Ygd42AJ.aspx#';
@@ -953,11 +941,16 @@
         }
 
         function processInlineMarkdown(text) {
-            // Escape HTML first, then apply markdown rules.
             text = escapeHtml(text);
             text = text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
             text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
             return text;
+        }
+
+        // Converts a title string to a filename-safe slug with underscores.
+        // e.g. "Finding a Slower Pace of Life" -> "Finding_a_Slower_Pace_of_Life"
+        function titleToSlug(title) {
+            return title.replace(/\s+/g, '_').replace(/[^A-Za-z0-9_\-]/g, '');
         }
 
         // =====================================================================
@@ -1053,10 +1046,12 @@
             });
             blocksHtml += '</div>';
 
-            var likeLabel = liked ? '[LIKED]' : '[LIKE]';
-            var likedClass = liked ? ' liked' : '';
-            var actionsHtml =
-                '<div class="entry-actions">'
+            var likeLabel  = liked ? '[LIKED]' : '[LIKE]';
+            var likedClass = liked ? ' liked'  : '';
+
+            // Both LIKE and CMT live in the title row, right-aligned.
+            var headerActionsHtml =
+                '<div class="entry-header-actions">'
               + '<button class="action-btn' + likedClass + '"'
               + ' id="like-btn-' + post.id + '"'
               + ' onclick="handleLike(\'' + post.id + '\')">'
@@ -1066,14 +1061,14 @@
               + ' onclick="openCommentModal(\'' + post.id + '\')">[CMT]</button>'
               + '</div>';
 
-            return '<article class="blog-entry">'
+            return '<article class="blog-entry" data-post-id="' + post.id + '" data-post-title="' + escapeHtml(post.title) + '">'
                  + '<div class="entry-header">'
                  + '<span class="entry-date">' + escapeHtml(post.date) + '</span>'
                  + '<h2 class="entry-title">' + escapeHtml(post.title) + '</h2>'
+                 + headerActionsHtml
                  + '</div>'
                  + tagsHtml
                  + blocksHtml
-                 + actionsHtml
                  + '</article>';
         }
 
@@ -1089,10 +1084,9 @@
 
         // =====================================================================
         // LIKES
-        // Uses counterapi.dev (CountAPI-compatible replacement).
-        // GET  /v1/{namespace}/{key}    -- read current count
-        // GET  /v1/{namespace}/{key}/up -- increment and return new count
-        // Response body: { "value": N }
+        // Uses countapi.xyz.
+        // GET  /get/{namespace}/{key}  -- read current count, returns { value: N }
+        // GET  /hit/{namespace}/{key}  -- increment and return new count
         // =====================================================================
         function getLikedPosts() {
             try {
@@ -1116,13 +1110,13 @@
 
         function loadAllLikeCounts() {
             BLOG_POSTS.forEach(function(post) {
-                var url = 'https://api.counterapi.dev/v1/'
+                var url = 'https://api.countapi.xyz/get/'
                         + COUNTER_NAMESPACE + '/' + post.id;
                 fetch(url)
                     .then(function(r) { return r.json(); })
                     .then(function(data) {
                         var el = document.getElementById('like-count-' + post.id);
-                        if (el && typeof data.value !== 'undefined') {
+                        if (el && typeof data.value !== 'undefined' && data.value !== null) {
                             el.textContent = data.value;
                         }
                     })
@@ -1142,15 +1136,14 @@
                 btn.style.pointerEvents = 'none';
             }
 
-            var url = 'https://api.counterapi.dev/v1/'
-                    + COUNTER_NAMESPACE + '/' + postId + '/up';
+            var url = 'https://api.countapi.xyz/hit/'
+                    + COUNTER_NAMESPACE + '/' + postId;
             fetch(url)
                 .then(function(r) { return r.json(); })
                 .then(function(data) {
                     markPostLiked(postId);
-                    var countEl = document.getElementById('like-count-' + postId);
-                    var newCount = typeof data.value !== 'undefined' ? data.value : '--';
-                    if (countEl) countEl.textContent = newCount;
+                    var newCount = (typeof data.value !== 'undefined' && data.value !== null)
+                                 ? data.value : '--';
                     if (btn) {
                         btn.style.opacity = '';
                         btn.style.pointerEvents = '';
@@ -1290,15 +1283,45 @@
         }
 
         // =====================================================================
-        // SCROLL PERCENT
+        // STATUS BAR -- scroll percent + current article detection
+        // Tracks whichever article's top edge is closest to viewport center.
         // =====================================================================
-        function initScrollPercent() {
+        function initStatusBar() {
             var statusRight = document.getElementById('statusRight');
-            window.addEventListener('scroll', function() {
+            var statusPath  = document.getElementById('statusPath');
+
+            function updateStatus() {
+                // Scroll percent
                 var docHeight = document.body.scrollHeight - window.innerHeight;
                 var pct = docHeight <= 0 ? 0 : Math.round((window.scrollY / docHeight) * 100);
                 statusRight.textContent = 'utf-8 | blog | ' + pct + '%';
-            });
+
+                // Current article: find the entry whose top is closest to viewport center
+                var viewportCenter = window.scrollY + window.innerHeight / 2;
+                var articles = document.querySelectorAll('.blog-entry');
+                var closest = null;
+                var closestDist = Infinity;
+
+                articles.forEach(function(article) {
+                    var top  = article.offsetTop;
+                    var dist = Math.abs(top - viewportCenter);
+                    if (dist < closestDist) {
+                        closestDist = dist;
+                        closest = article;
+                    }
+                });
+
+                if (closest) {
+                    var title = closest.getAttribute('data-post-title') || '';
+                    var slug  = titleToSlug(title);
+                    statusPath.textContent = '~/blog/' + slug + '.log [+]';
+                } else {
+                    statusPath.textContent = '~/blog.log [+]';
+                }
+            }
+
+            window.addEventListener('scroll', updateStatus, { passive: true });
+            updateStatus();
         }
 
         // =====================================================================
@@ -1332,7 +1355,7 @@
         window.onload = function() {
             renderAllPosts();
             initTheme();
-            initScrollPercent();
+            initStatusBar();
             initLightbox();
             initIframeAutoHeight();
             loadAllLikeCounts();
