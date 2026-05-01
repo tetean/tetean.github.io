@@ -1100,15 +1100,27 @@
             return canvas;
         }
 
+        // FIX: Use explicit per-theme color constants instead of reading CSS
+        // variables via getComputedStyle. This prevents the canvas from
+        // inheriting the dark-theme value (#a9b1d6) when light mode is active,
+        // which would make the text nearly invisible on the white sidebar.
+        var THEME_COLORS = {
+            dark:  { text: '#a9b1d6', blue: '#7aa2f7' },
+            light: { text: '#111111', blue: '#005a9e' }
+        };
+
+        function getThemeColors() {
+            var isLight = document.body.classList.contains('light-mode');
+            return isLight ? THEME_COLORS.light : THEME_COLORS.dark;
+        }
+
         function decodeEmails() {
-            var rootStyle   = getComputedStyle(document.documentElement);
-            var blueColor   = rootStyle.getPropertyValue('--accent-blue').trim();
-            var mainColor   = rootStyle.getPropertyValue('--text-main').trim();
+            var colors = getThemeColors();
 
             document.querySelectorAll('a[data-e]').forEach(function(el) {
                 var decoded  = rot13(el.getAttribute('data-e'));
                 var fontSize = parseFloat(getComputedStyle(el).fontSize);
-                var canvas   = makeEmailCanvas(decoded, blueColor, fontSize);
+                var canvas   = makeEmailCanvas(decoded, colors.blue, fontSize);
                 el.innerHTML = '';
                 el.appendChild(canvas);
                 el.href      = '#';
@@ -1123,7 +1135,7 @@
             document.querySelectorAll('span[data-e]').forEach(function(el) {
                 var decoded  = rot13(el.getAttribute('data-e'));
                 var fontSize = parseFloat(getComputedStyle(el).fontSize);
-                var canvas   = makeEmailCanvas(decoded, mainColor, fontSize);
+                var canvas   = makeEmailCanvas(decoded, colors.text, fontSize);
                 el.innerHTML = '';
                 el.appendChild(canvas);
             });
@@ -1132,17 +1144,17 @@
         // =====================================================================
         // BIO TEXT OBFUSCATION
         // FIX: name, role, dept values are stored ROT-13 encoded in data-t
-        // attributes and rendered to canvas at runtime using --text-main color.
+        // attributes and rendered to canvas at runtime using the explicit
+        // per-theme text color (not getComputedStyle) for reliable contrast.
         // =====================================================================
 
         function decodeTexts() {
-            var rootStyle = getComputedStyle(document.documentElement);
-            var mainColor = rootStyle.getPropertyValue('--text-main').trim();
+            var colors = getThemeColors();
 
             document.querySelectorAll('span[data-t]').forEach(function(el) {
                 var decoded  = rot13(el.getAttribute('data-t'));
                 var fontSize = parseFloat(getComputedStyle(el).fontSize);
-                var canvas   = makeEmailCanvas(decoded, mainColor, fontSize);
+                var canvas   = makeEmailCanvas(decoded, colors.text, fontSize);
                 el.innerHTML = '';
                 el.appendChild(canvas);
             });
@@ -1867,7 +1879,7 @@
                 setupVimObserver();
                 decodeEmails();
                 // FIX: re-render bio text canvases on every theme change so
-                // color matches the current --text-main value.
+                // color matches the current theme (dark or light).
                 decodeTexts();
             }
 
