@@ -79,6 +79,7 @@
             z-index: 500;
         }
 
+        /* --- Avatar Box & Skeleton --- */
         .left-panel .avatar-box {
             width: 50%;
             aspect-ratio: 1 / 1;
@@ -87,12 +88,57 @@
             background: var(--bg-status);
             flex-shrink: 0;
             align-self: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /*
+         * Skeleton placeholder: visible while the image has not yet loaded.
+         * Uses an animated shimmer sweep via a pseudo-element.
+         */
+        .avatar-box::before {
+            content: '';
+            position: absolute;
+            inset: 5px;
+            background: linear-gradient(
+                90deg,
+                var(--bg-status) 25%,
+                var(--text-muted) 50%,
+                var(--bg-status) 75%
+            );
+            background-size: 200% 100%;
+            animation: avatar-shimmer 1.4s ease-in-out infinite;
+            opacity: 1;
+            transition: opacity 0.5s;
+            z-index: 1;
+        }
+
+        /* Once the image has loaded, the JS adds .avatar-loaded to the box,
+           which fades the skeleton out. */
+        .avatar-box.avatar-loaded::before {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        @keyframes avatar-shimmer {
+            0%   { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
         }
 
         .left-panel .avatar-box img {
             width: 100%;
             height: 100%;
             object-fit: cover;
+            position: relative;
+            z-index: 2;
+            /* Image fades in from transparent after load */
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+
+        /* JS adds .avatar-loaded to the box; img inherits visibility via this rule */
+        .avatar-box.avatar-loaded img {
+            opacity: 1;
         }
 
         .left-panel .bio-info-list {
@@ -501,8 +547,6 @@
             100% { transform: perspective(200px) rotateX(0deg); }
         }
 
-        /* FIX: fixed height so the subtitle never causes a layout shift.
-           Space is always reserved; opacity-only transition shows/hides the text. */
         .flip-subtitle {
             font-family: var(--font-mono);
             font-size: 0.72rem;
@@ -573,8 +617,6 @@
         }
 
         .modal-traffic .btn-close { background: #ff5f57; cursor: pointer; }
-
-        /* FIX: yellow and green dots are decorative only -- not interactive */
         .modal-traffic .btn-min  { background: #febc2e; pointer-events: none; cursor: default; }
         .modal-traffic .btn-max  { background: #28c840; pointer-events: none; cursor: default; }
 
@@ -616,7 +658,6 @@
             align-items: center;
         }
 
-        /* FIX: white-space: pre preserves the trailing space after ## */
         .msg-section-title::before {
             content: "## ";
             color: var(--text-muted);
@@ -788,7 +829,6 @@
                     <span class="btn-min"></span>
                     <span class="btn-max"></span>
                 </div>
-                <!-- <div class="modal-title">messages -- wjx.top/vm/Ygd42AJ.aspx</div> -->
             </div>
             <div class="modal-body">
                 <div class="modal-iframe-wrap">
@@ -868,17 +908,9 @@
 
     <!-- Fixed Left Sidebar -->
     <div class="left-panel" id="leftPanel">
-        <div class="avatar-box">
+        <div class="avatar-box" id="avatarBox">
             <img id="profileAvatar" src="" alt="Profile">
         </div>
-        <!--
-            FIX: name, role, dept values are ROT-13 encoded in data-t attributes.
-            decodeTexts() renders them to canvas at runtime to resist crawlers.
-            ROT-13 mappings:
-              "Xiean Wang (Sean)"              -> "Kvrna Jnat (Frna)"
-              "MPhil Student"                  -> "ZCuvy Fghqrag"
-              "Sun Yat-sen University (SYSU)"  -> "Fha Lng-fra Havirefvgl (FLPH)"
-        -->
         <div class="bio-info-list">
             <span class="label">name:</span><span data-t="Kvrna Jnat (Frna)"></span>
             <span class="label">role:</span><span data-t="ZCuvy Fghqrag"></span>
@@ -896,12 +928,8 @@
 
     <div class="container">
 
-        <!-- Anchor: flip board top position (festival / message mode) -->
         <div id="flip-anchor-top"></div>
-
         <div id="content"></div>
-
-        <!-- Anchor: flip board bottom position (unused; board is hidden in date mode) -->
         <div id="flip-anchor-bottom"></div>
 
         <footer style="margin-top: 40px; opacity: 0.3; font-size: 0.7rem; text-align: center;">
@@ -928,7 +956,7 @@
 
     <script>
         // =====================================================================
-        // AVATAR POOL
+        // AVATAR CONFIGURATION
         // =====================================================================
 
         var AVATAR_POOL = [
@@ -936,8 +964,164 @@
             'https://raw.githubusercontent.com/tetean/image-host/main/notion_pic/202604231831704.jpg'
         ];
 
-        document.getElementById('profileAvatar').src =
-            AVATAR_POOL[Math.floor(Math.random() * AVATAR_POOL.length)];
+        /*
+         * ANIME_AVATAR_URL
+         * Set this to the URL of the anime avatar to enable the scroll-trigger
+         * easter egg. If this string is empty, the feature is disabled and the
+         * profile avatar never changes.
+         *
+         * Replace the placeholder below with the actual image URL when ready.
+         */
+        var ANIME_AVATAR_URL = '';
+        // var ANIME_AVATAR_URL = 'https://example.com/your-anime-avatar.jpg';
+
+        // =====================================================================
+        // AVATAR STATE & HELPERS
+        // =====================================================================
+
+        /*
+         * avatarState tracks which image is currently shown and whether a
+         * restore timer is in progress.
+         *
+         * scrollPhase tracks where we are in the two-cycle trigger sequence:
+         *   0 - initial / just reset
+         *   1 - reached bottom at least once in cycle 1
+         *   2 - returned to top after cycle 1 (cycle 1 complete; waiting for cycle 2 start)
+         *   3 - reached bottom in cycle 2
+         *   (trigger fires when top is reached from phase 3)
+         *
+         * wasAtBottom / wasAtTop are edge-detection flags so that arriving at
+         * bottom/top only advances the phase once per visit, not on every
+         * scroll event while the threshold is met.
+         */
+        var avatarState = {
+            current:      'original',   // 'original' | 'anime'
+            restoreTimer: null,
+            locked:       false         // true while anime is displayed; ignores new triggers
+        };
+
+        var scrollPhase = 0;
+        var wasAtBottom = false;
+        var wasAtTop    = true;         // page starts at top
+
+        var ANIME_DISPLAY_MS = 10000;   // 10 seconds
+        var AVATAR_FADE_MS   = 500;     // must match CSS transition duration
+
+        function isAtBottom() {
+            return (window.scrollY + window.innerHeight) >= (document.body.scrollHeight - 10);
+        }
+
+        function isAtTop() {
+            return window.scrollY < 100;
+        }
+
+        /*
+         * loadAvatar(url, onDone)
+         * Fades the current avatar out, swaps the src, waits for the new image
+         * to load, then fades back in. onDone is called after the fade-in
+         * completes (or immediately if no URL is provided).
+         */
+        function loadAvatar(url, onDone) {
+            var img = document.getElementById('profileAvatar');
+            var box = document.getElementById('avatarBox');
+
+            // Fade out
+            img.style.transition = 'opacity ' + (AVATAR_FADE_MS / 1000) + 's';
+            img.style.opacity = '0';
+
+            setTimeout(function() {
+                img.src = '';
+                box.classList.remove('avatar-loaded');
+
+                var newImg = new Image();
+                newImg.onload = function() {
+                    img.src = url;
+                    // Force reflow so the transition fires correctly
+                    img.offsetHeight; // eslint-disable-line no-unused-expressions
+                    box.classList.add('avatar-loaded');
+                    if (onDone) { onDone(); }
+                };
+                newImg.onerror = function() {
+                    // If the new image fails to load, silently restore original
+                    restoreOriginalAvatar();
+                };
+                newImg.src = url;
+            }, AVATAR_FADE_MS);
+        }
+
+        function showAnimeAvatar() {
+            if (!ANIME_AVATAR_URL) { return; }
+            avatarState.current = 'anime';
+            avatarState.locked  = true;
+
+            loadAvatar(ANIME_AVATAR_URL, function() {
+                // Start the 10-second restore countdown after the image is visible
+                avatarState.restoreTimer = setTimeout(function() {
+                    restoreOriginalAvatar();
+                }, ANIME_DISPLAY_MS);
+            });
+        }
+
+        function restoreOriginalAvatar() {
+            if (avatarState.restoreTimer) {
+                clearTimeout(avatarState.restoreTimer);
+                avatarState.restoreTimer = null;
+            }
+
+            var originalSrc = AVATAR_POOL[Math.floor(Math.random() * AVATAR_POOL.length)];
+
+            loadAvatar(originalSrc, function() {
+                avatarState.current = 'original';
+                avatarState.locked  = false;
+                // Reset scroll phase so the user must complete two full cycles again
+                scrollPhase = 0;
+                wasAtBottom = false;
+                wasAtTop    = isAtTop();
+            });
+        }
+
+        /*
+         * handleScrollAvatarTrigger()
+         * Called on every scroll event. Advances the phase state machine and
+         * fires showAnimeAvatar() when the two-cycle condition is met.
+         *
+         * Phase transitions:
+         *   top  -> bottom  (phase 0->1)   first descent to bottom
+         *   bottom -> top   (phase 1->2)   first return to top   [cycle 1 done]
+         *   top  -> bottom  (phase 2->3)   second descent to bottom
+         *   bottom -> top   (phase 3->FIRE) second return to top  [trigger]
+         */
+        function handleScrollAvatarTrigger() {
+            // Feature disabled or already showing anime avatar
+            if (!ANIME_AVATAR_URL || avatarState.locked) { return; }
+
+            var atBottom = isAtBottom();
+            var atTop    = isAtTop();
+
+            // Detect leading edge of arriving at bottom
+            if (atBottom && !wasAtBottom) {
+                wasAtBottom = true;
+                wasAtTop    = false;
+                if (scrollPhase === 0) { scrollPhase = 1; }
+                else if (scrollPhase === 2) { scrollPhase = 3; }
+            }
+
+            // Detect leading edge of arriving at top
+            if (atTop && !wasAtTop) {
+                wasAtTop    = true;
+                wasAtBottom = false;
+                if (scrollPhase === 1) {
+                    scrollPhase = 2;                    // cycle 1 complete
+                } else if (scrollPhase === 3) {
+                    scrollPhase = 0;                    // reset for next time
+                    showAnimeAvatar();                  // TRIGGER
+                }
+            }
+
+            // Edge resets when leaving the boundary zones
+            if (!atBottom) { wasAtBottom = false; }
+            if (!atTop)    { wasAtTop    = false; }
+        }
 
         // =====================================================================
         // MARKED SETUP
@@ -1005,19 +1189,6 @@
 </div>
 
 </section>
-
-<!--
-<div class="pub-card">
-  <div class="pub-cover">
-    <img src="https://api.dicebear.com/7.x/identicon/svg?seed=csp" alt="CSP Cover">
-  </div>
-  <div class="pub-info">
-    <strong>CSP-CPP Benchmark: Evaluating Crystal Structure Generation</strong>
-    <span class="comment">Xiean Wang, et al. | Targeting NeurIPS 2026 (CCF A)</span>
-    <p>Introduced a benchmark addressing the gap between geometric fidelity and practical utility in crystal generation.</p>
-  </div>
-</div>
--->
 
 <section id="awards">
 <h2>Selected_Awards</h2>
@@ -1100,10 +1271,6 @@
             return canvas;
         }
 
-        // FIX: Use explicit per-theme color constants instead of reading CSS
-        // variables via getComputedStyle. This prevents the canvas from
-        // inheriting the dark-theme value (#a9b1d6) when light mode is active,
-        // which would make the text nearly invisible on the white sidebar.
         var THEME_COLORS = {
             dark:  { text: '#a9b1d6', blue: '#7aa2f7' },
             light: { text: '#111111', blue: '#005a9e' }
@@ -1143,9 +1310,6 @@
 
         // =====================================================================
         // BIO TEXT OBFUSCATION
-        // FIX: name, role, dept values are stored ROT-13 encoded in data-t
-        // attributes and rendered to canvas at runtime using the explicit
-        // per-theme text color (not getComputedStyle) for reliable contrast.
         // =====================================================================
 
         function decodeTexts() {
@@ -1460,11 +1624,9 @@
         var flipTiles  = [];
         var lastFlipText = '';
 
-        // FIX: increased durations so each display is readable before cycling.
         var BOARD_SHORT_DURATION = 5000;
         var BOARD_CHUNK_DURATION = 4000;
-
-        var BOARD_IDLE_INTERVAL = 60000;
+        var BOARD_IDLE_INTERVAL  = 60000;
 
         var SYSTEM_MESSAGE = '';
         var BOARD_MESSAGE_CHUNK_DURATION = 8000;
@@ -1657,8 +1819,6 @@
             var subEl = document.getElementById('flipSubtitle');
             if (!subEl) return;
             subEl.textContent = text;
-            // FIX: height is fixed in CSS; only opacity changes so the layout
-            // below the board is never displaced by the subtitle appearing.
             subEl.style.opacity = text ? '1' : '0';
         }
 
@@ -1878,8 +2038,6 @@
                 rebuildVimIntro();
                 setupVimObserver();
                 decodeEmails();
-                // FIX: re-render bio text canvases on every theme change so
-                // color matches the current theme (dark or light).
                 decodeTexts();
             }
 
@@ -1909,6 +2067,22 @@
                 }
                 render();
             }
+
+            // ------------------------------------------------------------------
+            // Initial avatar load with skeleton placeholder + fade-in
+            // ------------------------------------------------------------------
+            var avatarImg = document.getElementById('profileAvatar');
+            var avatarBox = document.getElementById('avatarBox');
+            var initialSrc = AVATAR_POOL[Math.floor(Math.random() * AVATAR_POOL.length)];
+
+            avatarImg.addEventListener('load', function() {
+                avatarBox.classList.add('avatar-loaded');
+            });
+            avatarImg.addEventListener('error', function() {
+                // Even on error, remove the skeleton so it does not spin forever
+                avatarBox.classList.add('avatar-loaded');
+            });
+            avatarImg.src = initialSrc;
 
             applySystemTheme();
             mq.addEventListener('change', applySystemTheme);
@@ -1968,6 +2142,9 @@
             });
 
             window.addEventListener('scroll', function() {
+                // Avatar scroll trigger check (runs regardless of clickLock)
+                handleScrollAvatarTrigger();
+
                 if (clickLock) {
                     updateStatus(currentSection);
                     return;
@@ -1975,7 +2152,6 @@
 
                 var scrollY = window.scrollY;
 
-                // ---- FIX: when scrolled back to the very top, always select news ----
                 if (scrollY < 100) {
                     currentSection = 'news';
                     navLinks.forEach(function(link) {
@@ -1987,7 +2163,6 @@
                     updateStatus('news');
                     return;
                 }
-                // ---------------------------------------------------------------------
 
                 var sections = document.querySelectorAll('section');
                 var found = '';
