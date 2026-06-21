@@ -969,43 +969,37 @@
          * Set this to the URL of the anime avatar to enable the scroll-trigger
          * easter egg. If this string is empty, the feature is disabled and the
          * profile avatar never changes.
-         *
-         * Replace the placeholder below with the actual image URL when ready.
          */
         var ANIME_AVATAR_URL = 'https://raw.githubusercontent.com/tetean/image-host/main/notion_pic/202606211338332.png';
-        // var ANIME_AVATAR_URL = 'https://example.com/your-anime-avatar.jpg';
 
         // =====================================================================
         // AVATAR STATE & HELPERS
         // =====================================================================
 
         /*
-         * avatarState tracks which image is currently shown and whether a
-         * restore timer is in progress.
-         *
-         * scrollPhase tracks where we are in the two-cycle trigger sequence:
-         *   0 - initial / just reset
+         * scrollPhase tracks position in the two-cycle trigger sequence:
+         *   0 - initial / just reset; page starts at top
          *   1 - reached bottom at least once in cycle 1
-         *   2 - returned to top after cycle 1 (cycle 1 complete; waiting for cycle 2 start)
+         *   2 - returned to top after cycle 1 (cycle 1 complete)
          *   3 - reached bottom in cycle 2
-         *   (trigger fires when top is reached from phase 3)
+         *   trigger fires when top is reached from phase 3
          *
-         * wasAtBottom / wasAtTop are edge-detection flags so that arriving at
-         * bottom/top only advances the phase once per visit, not on every
-         * scroll event while the threshold is met.
+         * wasAtBottom / wasAtTop are leading-edge flags so that arriving at a
+         * boundary only advances the phase once per visit, not on every scroll
+         * event while the threshold remains satisfied.
          */
         var avatarState = {
-            current:      'original',   // 'original' | 'anime'
+            current:      'original',
             restoreTimer: null,
-            locked:       false         // true while anime is displayed; ignores new triggers
+            locked:       false
         };
 
         var scrollPhase = 0;
         var wasAtBottom = false;
-        var wasAtTop    = true;         // page starts at top
+        var wasAtTop    = true;
 
-        var ANIME_DISPLAY_MS = 10000;   // 10 seconds
-        var AVATAR_FADE_MS   = 500;     // must match CSS transition duration
+        var ANIME_DISPLAY_MS = 10000;
+        var AVATAR_FADE_MS   = 500;
 
         function isAtBottom() {
             return (window.scrollY + window.innerHeight) >= (document.body.scrollHeight - 10);
@@ -1018,14 +1012,17 @@
         /*
          * loadAvatar(url, onDone)
          * Fades the current avatar out, swaps the src, waits for the new image
-         * to load, then fades back in. onDone is called after the fade-in
-         * completes (or immediately if no URL is provided).
+         * to load, then fades back in via the CSS class mechanism.
+         *
+         * FIX: after assigning img.src the inline opacity style set during the
+         * fade-out must be removed so the .avatar-loaded class rule takes
+         * control of the image opacity again. Without this removal the inline
+         * style (specificity beats the class rule) keeps the image invisible.
          */
         function loadAvatar(url, onDone) {
             var img = document.getElementById('profileAvatar');
             var box = document.getElementById('avatarBox');
 
-            // Fade out
             img.style.transition = 'opacity ' + (AVATAR_FADE_MS / 1000) + 's';
             img.style.opacity = '0';
 
@@ -1036,14 +1033,10 @@
                 var newImg = new Image();
                 newImg.onload = function() {
                     img.src = url;
-                    // Force reflow so the transition fires correctly
-                    img.offsetHeight; // eslint-disable-line no-unused-expressions
+                    img.style.opacity = '';
+                    img.offsetHeight;
                     box.classList.add('avatar-loaded');
                     if (onDone) { onDone(); }
-                };
-                newImg.onerror = function() {
-                    // If the new image fails to load, silently restore original
-                    restoreOriginalAvatar();
                 };
                 newImg.src = url;
             }, AVATAR_FADE_MS);
@@ -1055,7 +1048,6 @@
             avatarState.locked  = true;
 
             loadAvatar(ANIME_AVATAR_URL, function() {
-                // Start the 10-second restore countdown after the image is visible
                 avatarState.restoreTimer = setTimeout(function() {
                     restoreOriginalAvatar();
                 }, ANIME_DISPLAY_MS);
@@ -1073,7 +1065,6 @@
             loadAvatar(originalSrc, function() {
                 avatarState.current = 'original';
                 avatarState.locked  = false;
-                // Reset scroll phase so the user must complete two full cycles again
                 scrollPhase = 0;
                 wasAtBottom = false;
                 wasAtTop    = isAtTop();
@@ -1086,19 +1077,17 @@
          * fires showAnimeAvatar() when the two-cycle condition is met.
          *
          * Phase transitions:
-         *   top  -> bottom  (phase 0->1)   first descent to bottom
-         *   bottom -> top   (phase 1->2)   first return to top   [cycle 1 done]
-         *   top  -> bottom  (phase 2->3)   second descent to bottom
-         *   bottom -> top   (phase 3->FIRE) second return to top  [trigger]
+         *   top -> bottom  (phase 0->1)    first descent to bottom
+         *   bottom -> top  (phase 1->2)    first return to top    [cycle 1 done]
+         *   top -> bottom  (phase 2->3)    second descent to bottom
+         *   bottom -> top  (phase 3->FIRE) second return to top   [trigger]
          */
         function handleScrollAvatarTrigger() {
-            // Feature disabled or already showing anime avatar
             if (!ANIME_AVATAR_URL || avatarState.locked) { return; }
 
             var atBottom = isAtBottom();
             var atTop    = isAtTop();
 
-            // Detect leading edge of arriving at bottom
             if (atBottom && !wasAtBottom) {
                 wasAtBottom = true;
                 wasAtTop    = false;
@@ -1106,19 +1095,17 @@
                 else if (scrollPhase === 2) { scrollPhase = 3; }
             }
 
-            // Detect leading edge of arriving at top
             if (atTop && !wasAtTop) {
                 wasAtTop    = true;
                 wasAtBottom = false;
                 if (scrollPhase === 1) {
-                    scrollPhase = 2;                    // cycle 1 complete
+                    scrollPhase = 2;
                 } else if (scrollPhase === 3) {
-                    scrollPhase = 0;                    // reset for next time
-                    showAnimeAvatar();                  // TRIGGER
+                    scrollPhase = 0;
+                    showAnimeAvatar();
                 }
             }
 
-            // Edge resets when leaving the boundary zones
             if (!atBottom) { wasAtBottom = false; }
             if (!atTop)    { wasAtTop    = false; }
         }
@@ -2079,7 +2066,6 @@
                 avatarBox.classList.add('avatar-loaded');
             });
             avatarImg.addEventListener('error', function() {
-                // Even on error, remove the skeleton so it does not spin forever
                 avatarBox.classList.add('avatar-loaded');
             });
             avatarImg.src = initialSrc;
@@ -2142,7 +2128,6 @@
             });
 
             window.addEventListener('scroll', function() {
-                // Avatar scroll trigger check (runs regardless of clickLock)
                 handleScrollAvatarTrigger();
 
                 if (clickLock) {
